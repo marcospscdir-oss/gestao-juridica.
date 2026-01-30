@@ -9,11 +9,14 @@ app.use(express.json());
 
 // CONFIGURAÇÃO DO BANCO NA NUVEM (NEON)
 const pool = new Pool({
-    connectionString: 'COLE_AQUI_SUA_STRING_DO_NEON',
-    ssl: { rejectUnauthorized: false } // Obrigatório para o Neon
+    // Usa a variável que você configurou no Render
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+    // Aumenta o tempo de espera para dar tempo do banco "acordar"
+    connectionTimeoutMillis: 10000 
 });
 
-// 1. ROTA DE LOGIN: Identifica se é o Marcos ou o Laurte
+// 1. LOGIN: Verifica se é o Marcos ou o Laurte
 app.post('/api/login', async (req, res) => {
     const { email, senha } = req.body;
     try {
@@ -28,11 +31,11 @@ app.post('/api/login', async (req, res) => {
         }
     } catch (err) { 
         console.error(err);
-        res.status(500).send("Erro no servidor de login."); 
+        res.status(500).send("Erro ao conectar com o banco de dados."); 
     }
 });
 
-// 2. SALVAR TAREFA: Vincula a tarefa ao ID de quem está logado
+// 2. SALVAR TAREFA: Agora vinculada ao usuário logado
 app.post('/api/salvar-tarefa', async (req, res) => {
     const { texto, usuario_id } = req.body;
     try {
@@ -41,13 +44,10 @@ app.post('/api/salvar-tarefa', async (req, res) => {
             [texto, usuario_id]
         );
         res.status(201).json(novaTarefa.rows[0]);
-    } catch (err) { 
-        console.error(err);
-        res.status(500).send("Erro ao salvar tarefa."); 
-    }
+    } catch (err) { res.status(500).send("Erro ao salvar."); }
 });
 
-// 3. LISTAR TAREFAS: Filtra para mostrar apenas o que pertence ao usuário logado
+// 3. LISTAR TAREFAS: Mostra apenas o que é de cada usuário
 app.get('/api/lista-tarefas/:usuario_id', async (req, res) => {
     const { usuario_id } = req.params;
     try {
@@ -56,56 +56,24 @@ app.get('/api/lista-tarefas/:usuario_id', async (req, res) => {
             [usuario_id]
         );
         res.json(resultado.rows);
-    } catch (err) { 
-        console.error(err);
-        res.status(500).send("Erro ao buscar tarefas."); 
-    }
+    } catch (err) { res.status(500).send("Erro ao buscar."); }
 });
 
 // 4. CONCLUIR TAREFA
 app.put('/api/concluir-tarefa/:id', async (req, res) => {
     try {
-        const { id } = req.params;
-        await pool.query("UPDATE tarefas SET status = 'CONCLUÍDA' WHERE id = $1", [id]);
-        res.json({ mensagem: "Tarefa concluída!" });
-    } catch (err) { res.status(500).send("Erro ao concluir."); }
+        await pool.query("UPDATE tarefas SET status = 'CONCLUÍDA' WHERE id = $1", [req.params.id]);
+        res.json({ mensagem: "OK" });
+    } catch (err) { res.status(500).send("Erro."); }
 });
 
 // 5. EXCLUIR TAREFA
 app.delete('/api/excluir-tarefa/:id', async (req, res) => {
     try {
-        const { id } = req.params;
-        await pool.query('DELETE FROM tarefas WHERE id = $1', [id]);
-        res.json({ mensagem: "Excluída com sucesso!" });
-    } catch (err) { res.status(500).send("Erro ao excluir."); }
-});
-
-// 6. REAGENDAR (Puxar pendências de ontem para hoje)
-app.post('/api/reagendar', async (req, res) => {
-    const { usuario_id } = req.body;
-    try {
-        const resultado = await pool.query(
-            "UPDATE tarefas SET criado_em = NOW() WHERE status = 'PENDENTE' AND criado_em < CURRENT_DATE AND usuario_id = $1",
-            [usuario_id]
-        );
-        res.json({ quantidade: resultado.rowCount });
-    } catch (err) { res.status(500).send("Erro ao reagendar."); }
-});
-
-// 7. RELATÓRIO DE DESEMPENHO (Últimos 7 dias)
-app.get('/api/relatorio/:usuario_id', async (req, res) => {
-    const { usuario_id } = req.params;
-    try {
-        const stats = await pool.query(`
-            SELECT 
-                COUNT(*) as total,
-                COUNT(*) FILTER (WHERE status = 'CONCLUÍDA') as concluidas
-            FROM tarefas 
-            WHERE usuario_id = $1 AND criado_em > NOW() - INTERVAL '7 days'
-        `, [usuario_id]);
-        res.json(stats.rows[0]);
-    } catch (err) { res.status(500).send("Erro no relatório."); }
+        await pool.query('DELETE FROM tarefas WHERE id = $1', [req.params.id]);
+        res.json({ mensagem: "Excluída" });
+    } catch (err) { res.status(500).send("Erro."); }
 });
 
 const porta = process.env.PORT || 3000;
-app.listen(porta, () => console.log(`🚀 Sistema Online na porta ${porta}`));
+app.listen(porta, () => console.log(`🚀 Servidor rodando na porta ${porta}`));
