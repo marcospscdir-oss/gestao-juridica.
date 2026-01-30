@@ -2,106 +2,140 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Painel - Gestão Marcos Pedro</title>
+    <title>Painel Executive - Marcos Pedro</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    
     <style>
-        :root { --primary: #007bff; --bg: #f4f7f6; --success: #28a745; --danger: #dc3545; --audiencia: #e83e8c; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        
+        :root { 
+            --bg-dark: #0f172a; 
+            --card-dark: #1e293b; 
+            --text-main: #f8fafc;
+            --accent: #38bdf8;
+            --success: #22c55e;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg-dark); 
+            color: var(--text-main);
+            margin: 0; padding: 20px; 
+            display: flex; flex-direction: column; align-items: center; 
+        }
+
         /* BOTÕES SUPERIORES */
-        .topo-acoes { display: flex; gap: 10px; margin-bottom: 20px; }
-        .btn-reagendar { background: #ff8c00; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-produtividade { background: #20b2aa; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .topo-acoes { display: flex; gap: 15px; margin-bottom: 25px; }
+        .btn-reagendar { background: #ea580c; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-produtividade { background: #0891b2; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        .header { text-align: center; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 600px; margin-bottom: 20px; }
-        
-        /* PAINEL DE PRODUTIVIDADE VISUAL */
-        .painel-stats { display: flex; justify-content: space-around; background: #2c3e50; color: white; padding: 15px; border-radius: 12px; width: 100%; max-width: 600px; margin-bottom: 20px; }
-        .stat-item { text-align: center; }
-        .stat-valor { display: block; font-size: 1.4em; font-weight: bold; color: #20b2aa; }
-        .stat-label { font-size: 0.7em; text-transform: uppercase; opacity: 0.8; }
+        .header-pro { 
+            background: var(--card-dark); 
+            padding: 30px; border-radius: 24px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            width: 100%; max-width: 900px; 
+            margin-bottom: 30px;
+            display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap;
+        }
 
-        .mic-btn { width: 70px; height: 70px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 25px; cursor: pointer; }
-        .dashboard { display: flex; gap: 15px; width: 100%; max-width: 1400px; align-items: flex-start; margin-bottom: 30px; }
-        .coluna { background: #ebedef; flex: 1; border-radius: 15px; padding: 12px; min-height: 400px; }
-        .card-tarefa { background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 6px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: left; }
-        .card-tarefa.concluida { opacity: 0.5; background: #e9ecef; border-left-color: #6c757d; }
+        .mic-section { text-align: center; flex: 1; }
+        .chart-section { width: 180px; height: 180px; flex: 0 0 180px; }
+
+        .mic-btn { 
+            width: 80px; height: 80px; border-radius: 50%; border: none; 
+            background: var(--accent); color: white; font-size: 30px; 
+            cursor: pointer; box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+        }
+
+        /* COLUNAS */
+        .dashboard { display: flex; gap: 20px; width: 100%; max-width: 1400px; overflow-x: auto; padding-bottom: 20px; }
+        .coluna { 
+            background: var(--card-dark); 
+            border-radius: 20px; padding: 20px; 
+            min-width: 300px; flex: 1;
+            border-top: 4px solid var(--accent);
+        }
+        .coluna h2 { font-size: 1.2rem; color: var(--accent); margin-top: 0; }
+
+        .card-tarefa { 
+            background: #334155; 
+            padding: 16px; border-radius: 12px; 
+            margin-bottom: 12px; border-left: 4px solid var(--accent);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        #calendar { 
+            background: var(--card-dark); color: white;
+            padding: 25px; border-radius: 24px; 
+            width: 100%; max-width: 1400px; margin-top: 30px;
+        }
+
+        .btn-card { border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; margin-top: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="topo-acoes">
         <button class="btn-reagendar" onclick="reagendarOntem()">🔄 Reagendar Ontem</button>
-        <button class="btn-produtividade" onclick="abrirProdutividade()">📊 Detalhes Produtividade</button>
+        <button class="btn-produtividade" onclick="window.scrollTo(0,0)">📊 Dashboard Real-Time</button>
     </div>
 
-    <div class="header">
-        <h1 id="boas-vindas">🎙️ Olá!</h1>
-        <button id="meu-mic" class="mic-btn">🎤</button>
-        <p>Status: <span id="status-texto">Pronto</span></p>
-        
-        <div class="painel-stats">
-            <div class="stat-item"><span class="stat-valor" id="count-total">0</span><span class="stat-label">Total</span></div>
-            <div class="stat-item"><span class="stat-valor" id="count-ok">0</span><span class="stat-label">Concluídas</span></div>
-            <div class="stat-item"><span class="stat-valor" id="count-perf">0%</span><span class="stat-label">Eficiência</span></div>
+    <div class="header-pro">
+        <div class="mic-section">
+            <h1 id="boas-vindas" style="margin-top:0">🎙️ Olá!</h1>
+            <button id="meu-mic" class="mic-btn">🎤</button>
+            <p id="status-texto" style="color: var(--accent)">Sistema Pronto</p>
+            <button onclick="logout()" style="color:#94a3b8; background:none; border:none; cursor:pointer;">Encerrar Sessão</button>
         </div>
 
-        <button onclick="logout()" style="color:blue; background:none; border:none; cursor:pointer;">Sair</button>
+        <div class="chart-section">
+            <canvas id="graficoProdutividade"></canvas>
+        </div>
     </div>
 
     <div class="dashboard">
         <div class="coluna"><h2>📢 Audiências</h2><div id="lista-audiencia"></div></div>
         <div class="coluna"><h2>📅 Para Hoje</h2><div id="lista-hoje"></div></div>
         <div class="coluna"><h2>⏳ Agendados</h2><div id="lista-agendado"></div></div>
-        <div class="coluna"><h2>🧠 Concluídas</h2><div id="lista-historico"></div></div>
+        <div class="coluna"><h2>🧠 Histórico</h2><div id="lista-historico"></div></div>
     </div>
 
-    <div id="calendar" style="background:white; padding:20px; border-radius:15px; width:100%; max-width:1400px;"></div>
+    <div id="calendar"></div>
 
     <script>
     const API_URL = 'https://gestao-juridica-9r72.onrender.com';
     const usuarioId = localStorage.getItem('usuario_id');
     const usuarioNome = localStorage.getItem('usuario_nome');
+    let chartProd;
 
     if (!usuarioId) { window.location.href = 'login.html'; }
-    else { document.getElementById('boas-vindas').innerText = `🎙️ Painel de ${usuarioNome}`; }
+    else { document.getElementById('boas-vindas').innerText = `Painel de ${usuarioNome}`; }
 
-    let calendar;
-    document.addEventListener('DOMContentLoaded', () => {
-        calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { initialView: 'dayGridMonth', locale: 'pt-br' });
-        calendar.render();
-        carregarTudo();
-    });
-
-    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new Recognition();
-    recognition.lang = 'pt-BR';
-
-    document.getElementById('meu-mic').onclick = () => { recognition.start(); document.getElementById('status-texto').innerText = "Ouvindo..."; };
-
-    recognition.onresult = async (e) => {
-        const texto = e.results[0][0].transcript;
-        await fetch(`${API_URL}/api/salvar-tarefa`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ texto: texto, usuario_id: usuarioId })
+    // Inicializa o Gráfico
+    function inicializarGrafico(concluidas, pendentes) {
+        const ctx = document.getElementById('graficoProdutividade').getContext('2d');
+        if (chartProd) chartProd.destroy();
+        chartProd = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Concluídas', 'Pendentes'],
+                datasets: [{
+                    data: [concluidas, pendentes],
+                    backgroundColor: ['#22c55e', '#334155'],
+                    borderWidth: 0
+                }]
+            },
+            options: { cutout: '70%', plugins: { legend: { display: false } } }
         });
-        carregarTudo();
-        document.getElementById('status-texto').innerText = "✅ Salvo!";
-    };
+    }
 
     async function carregarTudo() {
         const res = await fetch(`${API_URL}/api/lista-tarefas/${usuarioId}`);
         const tarefas = await res.json();
         
-        // ATUALIZA PAINEL DE PRODUTIVIDADE
-        const resStats = await fetch(`${API_URL}/api/relatorio/${usuarioId}`);
-        const stats = await resStats.json();
-        const t = parseInt(stats.total) || 0;
-        const c = parseInt(stats.concluidas) || 0;
-        document.getElementById('count-total').innerText = t;
-        document.getElementById('count-ok').innerText = c;
-        document.getElementById('count-perf').innerText = t > 0 ? Math.round((c/t)*100) + '%' : '0%';
+        // Dados para o Gráfico
+        const concluidas = tarefas.filter(t => t.status === 'CONCLUÍDA').length;
+        const pendentes = tarefas.length - concluidas;
+        inicializarGrafico(concluidas, pendentes);
 
         const listas = {
             audiencia: document.getElementById('lista-audiencia'),
@@ -110,18 +144,18 @@
             historico: document.getElementById('lista-historico')
         };
         Object.values(listas).forEach(l => l.innerHTML = "");
-        const eventos = [];
         const hoje = new Date().toISOString().split('T')[0];
+        const eventos = [];
 
         tarefas.forEach(t => {
             const isConcluida = t.status === 'CONCLUÍDA';
             const dataT = t.criado_em.split('T')[0];
-            const card = `<div class="card-tarefa ${isConcluida ? 'concluida' : ''}">
+            const card = `<div class="card-tarefa">
                 <strong>${t.titulo}</strong><br>
-                <small>${dataT.split('-').reverse().join('/')}</small>
-                <div style="margin-top:8px;">
-                    ${!isConcluida ? `<button onclick="concluirTarefa(${t.id})" style="background:green; color:white; border:none; border-radius:5px; padding:4px 8px; cursor:pointer;">Concluir</button>` : ''}
-                    <button onclick="excluirTarefa(${t.id})" style="background:red; color:white; border:none; border-radius:5px; padding:4px 8px; cursor:pointer;">Excluir</button>
+                <small style="color:var(--accent)">${dataT.split('-').reverse().join('/')}</small>
+                <div style="margin-top:10px;">
+                    ${!isConcluida ? `<button class="btn-card" style="background:var(--success); color:white" onclick="concluirTarefa(${t.id})">Concluir</button>` : ''}
+                    <button class="btn-card" style="background:#ef4444; color:white" onclick="excluirTarefa(${t.id})">Excluir</button>
                 </div>
             </div>`;
 
@@ -135,18 +169,35 @@
         calendar.removeAllEvents(); calendar.addEventSource(eventos);
     }
 
+    // Reconhecimento de Voz
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new Recognition();
+    recognition.lang = 'pt-BR';
+    document.getElementById('meu-mic').onclick = () => { recognition.start(); document.getElementById('status-texto').innerText = "Ouvindo Voz..."; };
+    recognition.onresult = async (e) => {
+        const texto = e.results[0][0].transcript;
+        await fetch(`${API_URL}/api/salvar-tarefa`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ texto, usuario_id: usuarioId })
+        });
+        carregarTudo();
+        document.getElementById('status-texto').innerText = "✅ Tarefa Registrada!";
+    };
+
     async function reagendarOntem() {
-        if(confirm("Mover tarefas pendentes de ontem para hoje?")) {
+        if(confirm("Sincronizar tarefas pendentes de ontem para hoje?")) {
             await fetch(`${API_URL}/api/reagendar-ontem/${usuarioId}`, { method: 'PUT' });
             carregarTudo();
         }
     }
 
-    function abrirProdutividade() {
-        const total = document.getElementById('count-total').innerText;
-        const concluidas = document.getElementById('count-ok').innerText;
-        alert(`Relatório Semanal:\nVocê realizou ${concluidas} tarefas de um total de ${total}.`);
-    }
+    let calendar;
+    document.addEventListener('DOMContentLoaded', () => {
+        calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { initialView: 'dayGridMonth', themeSystem: 'standard' });
+        calendar.render();
+        carregarTudo();
+    });
 
     async function concluirTarefa(id) { await fetch(`${API_URL}/api/concluir-tarefa/${id}`, { method: 'PUT' }); carregarTudo(); }
     async function excluirTarefa(id) { if(confirm("Excluir?")) { await fetch(`${API_URL}/api/excluir-tarefa/${id}`, { method: 'DELETE' }); carregarTudo(); } }
