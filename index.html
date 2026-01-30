@@ -7,19 +7,45 @@
     <style>
         :root { --primary: #007bff; --bg: #f4f7f6; --success: #28a745; --danger: #dc3545; --audiencia: #e83e8c; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        /* BOTÕES SUPERIORES */
+        .topo-acoes { display: flex; gap: 10px; margin-bottom: 20px; }
+        .btn-reagendar { background: #ff8c00; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-produtividade { background: #20b2aa; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
         .header { text-align: center; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 600px; margin-bottom: 20px; }
+        
+        /* PAINEL DE PRODUTIVIDADE VISUAL */
+        .painel-stats { display: flex; justify-content: space-around; background: #2c3e50; color: white; padding: 15px; border-radius: 12px; width: 100%; max-width: 600px; margin-bottom: 20px; }
+        .stat-item { text-align: center; }
+        .stat-valor { display: block; font-size: 1.4em; font-weight: bold; color: #20b2aa; }
+        .stat-label { font-size: 0.7em; text-transform: uppercase; opacity: 0.8; }
+
         .mic-btn { width: 70px; height: 70px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 25px; cursor: pointer; }
         .dashboard { display: flex; gap: 15px; width: 100%; max-width: 1400px; align-items: flex-start; margin-bottom: 30px; }
         .coluna { background: #ebedef; flex: 1; border-radius: 15px; padding: 12px; min-height: 400px; }
-        .card-tarefa { background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 6px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .card-tarefa { background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 6px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: left; }
         .card-tarefa.concluida { opacity: 0.5; background: #e9ecef; border-left-color: #6c757d; }
     </style>
 </head>
 <body>
+
+    <div class="topo-acoes">
+        <button class="btn-reagendar" onclick="reagendarOntem()">🔄 Reagendar Ontem</button>
+        <button class="btn-produtividade" onclick="abrirProdutividade()">📊 Detalhes Produtividade</button>
+    </div>
+
     <div class="header">
         <h1 id="boas-vindas">🎙️ Olá!</h1>
         <button id="meu-mic" class="mic-btn">🎤</button>
         <p>Status: <span id="status-texto">Pronto</span></p>
+        
+        <div class="painel-stats">
+            <div class="stat-item"><span class="stat-valor" id="count-total">0</span><span class="stat-label">Total</span></div>
+            <div class="stat-item"><span class="stat-valor" id="count-ok">0</span><span class="stat-label">Concluídas</span></div>
+            <div class="stat-item"><span class="stat-valor" id="count-perf">0%</span><span class="stat-label">Eficiência</span></div>
+        </div>
+
         <button onclick="logout()" style="color:blue; background:none; border:none; cursor:pointer;">Sair</button>
     </div>
 
@@ -33,7 +59,7 @@
     <div id="calendar" style="background:white; padding:20px; border-radius:15px; width:100%; max-width:1400px;"></div>
 
     <script>
-    const API_URL = 'https://gestao-juridica-9r72.onrender.com'; // Seu link oficial
+    const API_URL = 'https://gestao-juridica-9r72.onrender.com';
     const usuarioId = localStorage.getItem('usuario_id');
     const usuarioNome = localStorage.getItem('usuario_nome');
 
@@ -67,6 +93,16 @@
     async function carregarTudo() {
         const res = await fetch(`${API_URL}/api/lista-tarefas/${usuarioId}`);
         const tarefas = await res.json();
+        
+        // ATUALIZA PAINEL DE PRODUTIVIDADE
+        const resStats = await fetch(`${API_URL}/api/relatorio/${usuarioId}`);
+        const stats = await resStats.json();
+        const t = parseInt(stats.total) || 0;
+        const c = parseInt(stats.concluidas) || 0;
+        document.getElementById('count-total').innerText = t;
+        document.getElementById('count-ok').innerText = c;
+        document.getElementById('count-perf').innerText = t > 0 ? Math.round((c/t)*100) + '%' : '0%';
+
         const listas = {
             audiencia: document.getElementById('lista-audiencia'),
             hoje: document.getElementById('lista-hoje'),
@@ -79,22 +115,37 @@
 
         tarefas.forEach(t => {
             const isConcluida = t.status === 'CONCLUÍDA';
+            const dataT = t.criado_em.split('T')[0];
             const card = `<div class="card-tarefa ${isConcluida ? 'concluida' : ''}">
                 <strong>${t.titulo}</strong><br>
+                <small>${dataT.split('-').reverse().join('/')}</small>
                 <div style="margin-top:8px;">
-                    ${!isConcluida ? `<button onclick="concluirTarefa(${t.id})" style="background:green; color:white; border:none; border-radius:5px; padding:4px 8px;">Concluir</button>` : ''}
-                    <button onclick="excluirTarefa(${t.id})" style="background:red; color:white; border:none; border-radius:5px; padding:4px 8px;">Excluir</button>
+                    ${!isConcluida ? `<button onclick="concluirTarefa(${t.id})" style="background:green; color:white; border:none; border-radius:5px; padding:4px 8px; cursor:pointer;">Concluir</button>` : ''}
+                    <button onclick="excluirTarefa(${t.id})" style="background:red; color:white; border:none; border-radius:5px; padding:4px 8px; cursor:pointer;">Excluir</button>
                 </div>
             </div>`;
 
             if (isConcluida) listas.historico.innerHTML += card;
             else if (t.titulo.toLowerCase().includes('audiência')) listas.audiencia.innerHTML += card;
-            else if (t.criado_em.split('T')[0] === hoje) listas.hoje.innerHTML += card;
+            else if (dataT === hoje) listas.hoje.innerHTML += card;
             else listas.agendado.innerHTML += card;
 
-            eventos.push({ title: t.titulo, start: t.criado_em.split('T')[0] });
+            eventos.push({ title: t.titulo, start: dataT });
         });
         calendar.removeAllEvents(); calendar.addEventSource(eventos);
+    }
+
+    async function reagendarOntem() {
+        if(confirm("Mover tarefas pendentes de ontem para hoje?")) {
+            await fetch(`${API_URL}/api/reagendar-ontem/${usuarioId}`, { method: 'PUT' });
+            carregarTudo();
+        }
+    }
+
+    function abrirProdutividade() {
+        const total = document.getElementById('count-total').innerText;
+        const concluidas = document.getElementById('count-ok').innerText;
+        alert(`Relatório Semanal:\nVocê realizou ${concluidas} tarefas de um total de ${total}.`);
     }
 
     async function concluirTarefa(id) { await fetch(`${API_URL}/api/concluir-tarefa/${id}`, { method: 'PUT' }); carregarTudo(); }
