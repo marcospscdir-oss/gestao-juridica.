@@ -12,7 +12,31 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
-// 1. SALVAR TAREFA (COM INTELIGÊNCIA DE DATA)
+// 1. LOGIN COM TRÊS ACESSOS (Marcos, Laurte e Vieira)
+app.post('/api/login', async (req, res) => {
+    const { email, senha } = req.body;
+    try {
+        let usuario = null;
+
+        if (email === 'marcospsc.dir@gmail.com' && senha === 'admin1640') {
+            usuario = { id: 1, nome: 'Marcos Pedro' };
+        } else if (email === 'laurte.adv@gmail.com' && senha === 'admin1640') { // Usei a senha padrão, mude se for outra
+            usuario = { id: 2, nome: 'Laurte Leandro' };
+        } else if (email === 'vieiraadvocacia2018@gmail.com' && senha === 'admin1640') {
+            usuario = { id: 3, nome: 'Vieira Advocacia' };
+        }
+
+        if (usuario) {
+            res.json(usuario);
+        } else {
+            res.status(401).json({ erro: "E-mail ou senha incorretos." });
+        }
+    } catch (err) { 
+        res.status(500).send("Erro no servidor."); 
+    }
+});
+
+// 2. SALVAR TAREFA (COM INTELIGÊNCIA DE DATA)
 app.post('/api/salvar-tarefa', async (req, res) => {
     const { texto, usuario_id } = req.body;
     try {
@@ -51,22 +75,12 @@ app.post('/api/salvar-tarefa', async (req, res) => {
     } catch (err) { res.status(500).send("Erro ao salvar."); }
 });
 
-// 2. LISTAR TAREFAS
+// 3. LISTAR TAREFAS
 app.get('/api/lista-tarefas/:usuario_id', async (req, res) => {
     try {
         const resultado = await pool.query('SELECT * FROM tarefas WHERE usuario_id = $1 ORDER BY criado_em ASC', [req.params.usuario_id]);
         res.json(resultado.rows);
     } catch (err) { res.status(500).send("Erro ao listar."); }
-});
-
-// 3. LOGIN
-app.post('/api/login', async (req, res) => {
-    const { email, senha } = req.body;
-    try {
-        const usuario = await pool.query('SELECT id, nome FROM usuarios WHERE email = $1 AND senha = $2', [email, senha]);
-        if (usuario.rows.length > 0) res.json(usuario.rows[0]);
-        else res.status(401).json({ erro: "Erro" });
-    } catch (err) { res.status(500).send("Erro no login."); }
 });
 
 // 4. CONCLUIR E EXCLUIR
@@ -80,9 +94,7 @@ app.delete('/api/excluir-tarefa/:id', async (req, res) => {
     res.json({ mensagem: "OK" });
 });
 
-// --- NOVAS ROTAS PARA OS BOTÕES DO TOPO ---
-
-// 5. REAGENDAR ONTEM (Move pendentes antigos para hoje)
+// 5. REAGENDAR ONTEM
 app.put('/api/reagendar-ontem/:usuario_id', async (req, res) => {
     try {
         const { usuario_id } = req.params;
@@ -95,7 +107,7 @@ app.put('/api/reagendar-ontem/:usuario_id', async (req, res) => {
     } catch (err) { res.status(500).send("Erro ao reagendar."); }
 });
 
-// 6. RELATÓRIO DE PRODUTIVIDADE (Alimenta o painel visual)
+// 6. RELATÓRIO DE PRODUTIVIDADE
 app.get('/api/relatorio/:usuario_id', async (req, res) => {
     try {
         const { usuario_id } = req.params;
