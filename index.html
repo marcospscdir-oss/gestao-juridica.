@@ -10,8 +10,8 @@
     <style>
         :root { 
             --bg-escritorio: #fcfcfc; 
-            --vinho-escuro: #4a0e0e; /* Tom sóbrio para destaques */
-            --dourado: #b8935a;      /* Dourado fiel ao logotipo */
+            --vinho-escuro: #4a0e0e; 
+            --dourado: #b8935a;      
             --cinza-texto: #333333;
             --borda: #e1e1e1;
         }
@@ -24,7 +24,7 @@
             display: flex; flex-direction: column; align-items: center; 
         }
 
-        /* TOPO COM IDENTIDADE VISUAL */
+        /* TOPO PROFISSIONAL */
         .topo-acoes { display: flex; gap: 15px; margin-bottom: 25px; }
         .btn-premium { 
             border: 1px solid var(--dourado); border-radius: 4px; padding: 10px 25px; 
@@ -49,13 +49,13 @@
         .mic-btn { 
             width: 65px; height: 65px; border-radius: 50%; border: 1px solid var(--dourado); 
             background: white; color: var(--dourado); font-size: 25px; 
-            cursor: pointer; transition: 0.3s;
+            cursor: pointer; transition: 0.3s; margin: 10px 0;
         }
         .mic-btn:hover { background: var(--dourado); color: white; }
 
-        .chart-box { width: 140px; height: 140px; }
+        .chart-box { width: 150px; height: 150px; }
 
-        /* DASHBOARD PROFISSIONAL */
+        /* DASHBOARD */
         .dashboard { display: flex; gap: 20px; width: 100%; max-width: 1450px; overflow-x: auto; padding: 10px; }
         .coluna { 
             background: white; border: 1px solid var(--borda); border-radius: 4px; padding: 20px; 
@@ -72,7 +72,6 @@
             margin-bottom: 15px; border-left: 3px solid var(--dourado);
             box-shadow: 2px 2px 5px rgba(0,0,0,0.02); text-align: left;
         }
-        .card-tarefa strong { font-size: 0.95rem; color: #222; }
 
         #calendar { 
             background: white; padding: 30px; border-radius: 4px; border: 1px solid var(--borda);
@@ -90,15 +89,16 @@
     </div>
 
     <div class="header-box">
-        <div style="flex: 1;">
+        <div style="flex: 1; text-align: left;">
             <h1 class="logo-text" id="boas-vindas">LAURTE LESSA & MARCOS PEDRO</h1>
-            <p style="font-size: 0.8rem; color: #888; margin-top: 5px;">ASSESSORIA JURÍDICA INTELIGENTE</p>
+            <p style="font-size: 0.8rem; color: #888; margin-top: 5px; letter-spacing: 1px;">ASSESSORIA JURÍDICA INTELIGENTE</p>
             <button id="meu-mic" class="mic-btn">🎤</button>
-            <p id="status-texto" style="font-size: 0.7rem; margin-top: 8px;">SISTEMA DE VOZ PRONTO</p>
+            <p id="status-texto" style="font-size: 0.7rem; margin: 0;">SISTEMA DE VOZ ATIVO</p>
+            <button onclick="logout()" style="background:none; border:none; color:#999; cursor:pointer; font-size: 0.7rem; margin-top: 10px;">Sair do Sistema</button>
         </div>
 
         <div class="chart-box">
-            <canvas id="graficoVoz"></canvas>
+            <canvas id="graficoProdutividade"></canvas>
         </div>
     </div>
 
@@ -106,7 +106,7 @@
         <div class="coluna"><h2>📢 Audiências</h2><div id="lista-audiencia"></div></div>
         <div class="coluna"><h2>📅 Para Hoje</h2><div id="lista-hoje"></div></div>
         <div class="coluna"><h2>⏳ Agendados</h2><div id="lista-agendado"></div></div>
-        <div class="coluna"><h2>🧠 Concluídas</h2><div id="lista-historico"></div></div>
+        <div class="coluna"><h2>🧠 Histórico</h2><div id="lista-historico"></div></div>
     </div>
 
     <div id="calendar"></div>
@@ -115,15 +115,16 @@
     const API_URL = 'https://gestao-juridica-9r72.onrender.com';
     const usuarioId = localStorage.getItem('usuario_id');
     const usuarioNome = localStorage.getItem('usuario_nome');
-    let meuChart;
+    let chartObj;
+    let calendar;
 
     if (!usuarioId) { window.location.href = 'login.html'; }
     else { document.getElementById('boas-vindas').innerText = usuarioNome.toUpperCase(); }
 
-    function gerarGrafico(concluidas, pendentes) {
-        const ctx = document.getElementById('graficoVoz').getContext('2d');
-        if (meuChart) meuChart.destroy();
-        meuChart = new Chart(ctx, {
+    function atualizarGrafico(concluidas, pendentes) {
+        const ctx = document.getElementById('graficoProdutividade').getContext('2d');
+        if (chartObj) chartObj.destroy();
+        chartObj = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: ['OK', 'Pendente'],
@@ -141,9 +142,10 @@
         const res = await fetch(`${API_URL}/api/lista-tarefas/${usuarioId}`);
         const tarefas = await res.json();
         
-        const ok = tarefas.filter(t => t.status === 'CONCLUÍDA').length;
-        const p = tarefas.length - ok;
-        gerarGrafico(ok, p);
+        // Estatísticas do Gráfico
+        const okCount = tarefas.filter(t => t.status === 'CONCLUÍDA').length;
+        const pCount = tarefas.length - okCount;
+        atualizarGrafico(okCount, pCount);
 
         const listas = {
             audiencia: document.getElementById('lista-audiencia'),
@@ -152,14 +154,17 @@
             historico: document.getElementById('lista-historico')
         };
         Object.values(listas).forEach(l => l.innerHTML = "");
-        const hoje = new Date().toISOString().split('T')[0];
+        
+        const hojeStr = new Date().toISOString().split('T')[0];
+        const eventosParaCalendario = [];
 
         tarefas.forEach(t => {
             const isConcluida = t.status === 'CONCLUÍDA';
-            const dataT = t.criado_em.split('T')[0];
+            const dataTarefa = t.criado_em.split('T')[0]; // IMPORTANTE: Corrige o registro no calendário
+
             const card = `<div class="card-tarefa">
                 <strong>${t.titulo.toUpperCase()}</strong><br>
-                <small style="color:var(--dourado); font-weight:bold;">${dataT.split('-').reverse().join('/')}</small>
+                <small style="color:var(--dourado); font-weight:bold;">${dataTarefa.split('-').reverse().join('/')}</small>
                 <div style="margin-top:10px;">
                     ${!isConcluida ? `<button class="btn-card" style="background:#b8935a; color:white" onclick="concluir(${t.id})">Concluir</button>` : ''}
                     <button class="btn-card" style="background:#eee; color:#666" onclick="excluir(${t.id})">Remover</button>
@@ -168,14 +173,25 @@
 
             if (isConcluida) listas.historico.innerHTML += card;
             else if (t.titulo.toLowerCase().includes('audiência')) listas.audiencia.innerHTML += card;
-            else if (dataT === hoje) listas.hoje.innerHTML += card;
+            else if (dataTarefa === hojeStr) listas.hoje.innerHTML += card;
             else listas.agendado.innerHTML += card;
+
+            // Alimenta o Calendário com TODAS as tarefas (Antigas e Novas)
+            eventosParaCalendario.push({
+                title: t.titulo,
+                start: dataTarefa,
+                color: isConcluida ? '#28a745' : '#b8935a'
+            });
         });
+
+        calendar.removeAllEvents();
+        calendar.addEventSource(eventosParaCalendario);
     }
 
+    // VOZ
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const rec = new Recognition(); rec.lang = 'pt-BR';
-    document.getElementById('meu-mic').onclick = () => { rec.start(); document.getElementById('status-texto').innerText = "OUVINDO COMANDO..."; };
+    document.getElementById('meu-mic').onclick = () => { rec.start(); document.getElementById('status-texto').innerText = "OUVINDO..."; };
     rec.onresult = async (e) => {
         const texto = e.results[0][0].transcript;
         await fetch(`${API_URL}/api/salvar-tarefa`, {
@@ -184,24 +200,28 @@
             body: JSON.stringify({ texto, usuario_id: usuarioId })
         });
         carregarTudo();
-        document.getElementById('status-texto').innerText = "✅ REGISTRADO COM SUCESSO";
+        document.getElementById('status-texto').innerText = "REGISTRADO";
     };
 
     async function reagendarOntem() {
-        if(confirm("Deseja sincronizar pendências anteriores para o dia de hoje?")) {
+        if(confirm("Sincronizar tarefas pendentes para hoje?")) {
             await fetch(`${API_URL}/api/reagendar-ontem/${usuarioId}`, { method: 'PUT' });
             carregarTudo();
         }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { initialView: 'dayGridMonth', locale: 'pt-br' });
+        calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { 
+            initialView: 'dayGridMonth',
+            locale: 'pt-br',
+            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,dayGridWeek' }
+        });
         calendar.render();
         carregarTudo();
     });
 
     async function concluir(id) { await fetch(`${API_URL}/api/concluir-tarefa/${id}`, { method: 'PUT' }); carregarTudo(); }
-    async function excluir(id) { if(confirm("Remover permanentemente?")) { await fetch(`${API_URL}/api/excluir-tarefa/${id}`, { method: 'DELETE' }); carregarTudo(); } }
+    async function excluir(id) { if(confirm("Remover?")) { await fetch(`${API_URL}/api/excluir-tarefa/${id}`, { method: 'DELETE' }); carregarTudo(); } }
     function logout() { localStorage.clear(); window.location.href = 'login.html'; }
     </script>
 </body>
