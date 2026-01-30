@@ -14,19 +14,21 @@
 <body>
     <div class="login-card">
         <h2>🔐 Acesso Restrito</h2>
-        <input type="email" id="email" placeholder="Seu e-mail (ex: marcospsc.dir@gmail.com)">
+        <input type="email" id="email" placeholder="Seu e-mail">
         <input type="password" id="senha" placeholder="Sua senha">
         <button class="btn-login" onclick="fazerLogin()">Entrar no Painel</button>
         <p id="msg" style="color: red; font-size: 0.8em; margin-top: 15px;"></p>
     </div>
 
     <script>
+        const API_URL = 'https://gestao-juridica-9r72.onrender.com'; // Seu link oficial
+
         async function fazerLogin() {
             const email = document.getElementById('email').value;
             const senha = document.getElementById('senha').value;
             
             try {
-                const res = await fetch('http://localhost:3000/api/login', {
+                const res = await fetch(`${API_URL}/api/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, senha })
@@ -34,7 +36,6 @@
 
                 const dados = await res.json();
                 if (res.ok) {
-                    // Guarda o ID do usuário (Marcos = 1, Laurte = 2) no navegador
                     localStorage.setItem('usuario_id', dados.id);
                     localStorage.setItem('usuario_nome', dados.nome);
                     window.location.href = 'index.html'; 
@@ -42,7 +43,7 @@
                     document.getElementById('msg').innerText = "E-mail ou senha incorretos.";
                 }
             } catch (err) {
-                document.getElementById('msg').innerText = "Erro ao conectar com o servidor.";
+                document.getElementById('msg').innerText = "Erro ao conectar com o servidor na nuvem.";
             }
         }
     </script>

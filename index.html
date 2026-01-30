@@ -5,15 +5,12 @@
     <title>Painel - Gestão Marcos Pedro</title>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     <style>
-        :root { 
-            --primary: #007bff; --bg: #f4f7f6; --success: #28a745; 
-            --danger: #dc3545; --reagenda: #fd7e14; --audiencia: #e83e8c; --agendado: #6f42c1;
-        }
+        :root { --primary: #007bff; --bg: #f4f7f6; --success: #28a745; --danger: #dc3545; --audiencia: #e83e8c; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .header { text-align: center; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 600px; margin-bottom: 20px; }
-        .mic-btn { width: 70px; height: 70px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 25px; cursor: pointer; transition: 0.3s; }
+        .mic-btn { width: 70px; height: 70px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 25px; cursor: pointer; }
         .dashboard { display: flex; gap: 15px; width: 100%; max-width: 1400px; align-items: flex-start; margin-bottom: 30px; }
-        .coluna { background: #ebedef; flex: 1; border-radius: 15px; padding: 12px; min-height: 500px; }
+        .coluna { background: #ebedef; flex: 1; border-radius: 15px; padding: 12px; min-height: 400px; }
         .card-tarefa { background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 6px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .card-tarefa.concluida { opacity: 0.5; background: #e9ecef; border-left-color: #6c757d; }
     </style>
@@ -23,7 +20,7 @@
         <h1 id="boas-vindas">🎙️ Olá!</h1>
         <button id="meu-mic" class="mic-btn">🎤</button>
         <p>Status: <span id="status-texto">Pronto</span></p>
-        <button onclick="logout()" style="background:none; border:none; color:blue; cursor:pointer;">Sair</button>
+        <button onclick="logout()" style="color:blue; background:none; border:none; cursor:pointer;">Sair</button>
     </div>
 
     <div class="dashboard">
@@ -33,31 +30,23 @@
         <div class="coluna"><h2>🧠 Concluídas</h2><div id="lista-historico"></div></div>
     </div>
 
-    <div id="calendar-container" style="background:white; padding:20px; border-radius:15px; width:100%; max-width:1400px;">
-        <div id="calendar"></div>
-    </div>
+    <div id="calendar" style="background:white; padding:20px; border-radius:15px; width:100%; max-width:1400px;"></div>
 
     <script>
-    // 1. Verifica se o usuário está logado
+    const API_URL = 'https://gestao-juridica-9r72.onrender.com'; // Seu link oficial
     const usuarioId = localStorage.getItem('usuario_id');
     const usuarioNome = localStorage.getItem('usuario_nome');
 
-    if (!usuarioId) {
-        window.location.href = 'login.html';
-    } else {
-        document.getElementById('boas-vindas').innerText = `🎙️ Painel de ${usuarioNome}`;
-    }
+    if (!usuarioId) { window.location.href = 'login.html'; }
+    else { document.getElementById('boas-vindas').innerText = `🎙️ Painel de ${usuarioNome}`; }
 
     let calendar;
     document.addEventListener('DOMContentLoaded', () => {
-        calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-            initialView: 'dayGridMonth', locale: 'pt-br', height: 500
-        });
+        calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { initialView: 'dayGridMonth', locale: 'pt-br' });
         calendar.render();
         carregarTudo();
     });
 
-    // 2. Gravação de Voz vinculada ao Usuário
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new Recognition();
     recognition.lang = 'pt-BR';
@@ -66,7 +55,7 @@
 
     recognition.onresult = async (e) => {
         const texto = e.results[0][0].transcript;
-        await fetch('http://localhost:3000/api/salvar-tarefa', {
+        await fetch(`${API_URL}/api/salvar-tarefa`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ texto: texto, usuario_id: usuarioId })
@@ -75,11 +64,9 @@
         document.getElementById('status-texto').innerText = "✅ Salvo!";
     };
 
-    // 3. Carregar apenas as tarefas do dono da conta
     async function carregarTudo() {
-        const res = await fetch(`http://localhost:3000/api/lista-tarefas/${usuarioId}`);
+        const res = await fetch(`${API_URL}/api/lista-tarefas/${usuarioId}`);
         const tarefas = await res.json();
-        
         const listas = {
             audiencia: document.getElementById('lista-audiencia'),
             hoje: document.getElementById('lista-hoje'),
@@ -87,36 +74,31 @@
             historico: document.getElementById('lista-historico')
         };
         Object.values(listas).forEach(l => l.innerHTML = "");
-        
         const eventos = [];
-        const hojeDataStr = new Date().toISOString().split('T')[0];
+        const hoje = new Date().toISOString().split('T')[0];
 
         tarefas.forEach(t => {
             const isConcluida = t.status === 'CONCLUÍDA';
-            const matchData = t.titulo.match(/(\d{2})\/(\d{2})/);
-            let dataStr = t.criado_em.split('T')[0];
-            if (matchData) dataStr = `2026-${matchData[2]}-${matchData[1]}`;
-
             const card = `<div class="card-tarefa ${isConcluida ? 'concluida' : ''}">
                 <strong>${t.titulo}</strong><br>
                 <div style="margin-top:8px;">
-                    ${!isConcluida ? `<button onclick="concluirTarefa(${t.id})" style="background:green; color:white; border:none; padding:5px; border-radius:5px;">Concluir</button>` : ''}
-                    <button onclick="excluirTarefa(${t.id})" style="background:red; color:white; border:none; padding:5px; border-radius:5px;">Excluir</button>
+                    ${!isConcluida ? `<button onclick="concluirTarefa(${t.id})" style="background:green; color:white; border:none; border-radius:5px; padding:4px 8px;">Concluir</button>` : ''}
+                    <button onclick="excluirTarefa(${t.id})" style="background:red; color:white; border:none; border-radius:5px; padding:4px 8px;">Excluir</button>
                 </div>
             </div>`;
 
             if (isConcluida) listas.historico.innerHTML += card;
             else if (t.titulo.toLowerCase().includes('audiência')) listas.audiencia.innerHTML += card;
-            else if (dataStr === hojeDataStr) listas.hoje.innerHTML += card;
+            else if (t.criado_em.split('T')[0] === hoje) listas.hoje.innerHTML += card;
             else listas.agendado.innerHTML += card;
 
-            eventos.push({ title: t.titulo, start: dataStr, allDay: true });
+            eventos.push({ title: t.titulo, start: t.criado_em.split('T')[0] });
         });
         calendar.removeAllEvents(); calendar.addEventSource(eventos);
     }
 
-    async function concluirTarefa(id) { await fetch(`http://localhost:3000/api/concluir-tarefa/${id}`, { method: 'PUT' }); carregarTudo(); }
-    async function excluirTarefa(id) { if(confirm("Excluir?")) { await fetch(`http://localhost:3000/api/excluir-tarefa/${id}`, { method: 'DELETE' }); carregarTudo(); } }
+    async function concluirTarefa(id) { await fetch(`${API_URL}/api/concluir-tarefa/${id}`, { method: 'PUT' }); carregarTudo(); }
+    async function excluirTarefa(id) { if(confirm("Excluir?")) { await fetch(`${API_URL}/api/excluir-tarefa/${id}`, { method: 'DELETE' }); carregarTudo(); } }
     function logout() { localStorage.clear(); window.location.href = 'login.html'; }
     </script>
 </body>
