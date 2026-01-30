@@ -12,27 +12,25 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
-// 1. LOGIN COM TRÊS ACESSOS (Marcos, Laurte e Vieira)
+// 1. LOGIN COM OS 3 ACESSOS ATIVOS
 app.post('/api/login', async (req, res) => {
     const { email, senha } = req.body;
-    try {
-        let usuario = null;
+    
+    // Lista oficial de usuários permitidos
+    const usuariosPermitidos = [
+        { id: 1, nome: 'Marcos Pedro', email: 'marcospsc.dir@gmail.com', senha: 'admin1640' },
+        { id: 2, nome: 'Laurte Leandro', email: 'laurte.adv@gmail.com', senha: 'admin1640' },
+        { id: 3, nome: 'Vieira Advocacia', email: 'vieiraadvocacia2018@gmail.com', senha: 'admin1640' }
+    ];
 
-        if (email === 'marcospsc.dir@gmail.com' && senha === 'admin1640') {
-            usuario = { id: 1, nome: 'Marcos Pedro' };
-        } else if (email === 'laurte.adv@gmail.com' && senha === 'admin1640') { // Usei a senha padrão, mude se for outra
-            usuario = { id: 2, nome: 'Laurte Leandro' };
-        } else if (email === 'vieiraadvocacia2018@gmail.com' && senha === 'admin1640') {
-            usuario = { id: 3, nome: 'Vieira Advocacia' };
-        }
+    // Procura se o e-mail e senha batem com algum da lista
+    const usuarioEncontrado = usuariosPermitidos.find(u => u.email === email && u.senha === senha);
 
-        if (usuario) {
-            res.json(usuario);
-        } else {
-            res.status(401).json({ erro: "E-mail ou senha incorretos." });
-        }
-    } catch (err) { 
-        res.status(500).send("Erro no servidor."); 
+    if (usuarioEncontrado) {
+        // Envia apenas o ID e o Nome para o sistema
+        res.json({ id: usuarioEncontrado.id, nome: usuarioEncontrado.nome });
+    } else {
+        res.status(401).json({ erro: "E-mail ou senha incorretos." });
     }
 });
 
