@@ -7,16 +7,17 @@ app.use(cors());
 app.use(express.static(__dirname));
 app.use(express.json());
 
-// CONFIGURAÇÃO DO BANCO NA NUVEM (NEON)
+// CONFIGURAÇÃO DEFINITIVA DO BANCO
 const pool = new Pool({
-    // Usa a variável que você configurou no Render
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
-    // Aumenta o tempo de espera para dar tempo do banco "acordar"
-    connectionTimeoutMillis: 10000 
+    // Usa a variável do Render ou o seu link direto do Neon se rodar local
+    connectionString: process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_r6mkt8QLwdoZ@ep-restless-heart-ac4e9km0-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require',
+    ssl: {
+        rejectUnauthorized: false // ESSENCIAL: Resolve o erro de SSL no seu PC e no Render
+    },
+    connectionTimeoutMillis: 20000 // Espera o banco acordar
 });
 
-// 1. LOGIN: Verifica se é o Marcos ou o Laurte
+// 1. LOGIN
 app.post('/api/login', async (req, res) => {
     const { email, senha } = req.body;
     try {
@@ -31,11 +32,11 @@ app.post('/api/login', async (req, res) => {
         }
     } catch (err) { 
         console.error(err);
-        res.status(500).send("Erro ao conectar com o banco de dados."); 
+        res.status(500).json({ erro: "Erro ao conectar no banco." }); 
     }
 });
 
-// 2. SALVAR TAREFA: Agora vinculada ao usuário logado
+// 2. SALVAR TAREFA
 app.post('/api/salvar-tarefa', async (req, res) => {
     const { texto, usuario_id } = req.body;
     try {
@@ -47,7 +48,7 @@ app.post('/api/salvar-tarefa', async (req, res) => {
     } catch (err) { res.status(500).send("Erro ao salvar."); }
 });
 
-// 3. LISTAR TAREFAS: Mostra apenas o que é de cada usuário
+// 3. LISTAR TAREFAS
 app.get('/api/lista-tarefas/:usuario_id', async (req, res) => {
     const { usuario_id } = req.params;
     try {
@@ -75,5 +76,16 @@ app.delete('/api/excluir-tarefa/:id', async (req, res) => {
     } catch (err) { res.status(500).send("Erro."); }
 });
 
+// 6. RELATÓRIO
+app.get('/api/relatorio/:usuario_id', async (req, res) => {
+    try {
+        const stats = await pool.query(`
+            SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE status = 'CONCLUÍDA') as concluidas
+            FROM tarefas WHERE usuario_id = $1 AND criado_em > NOW() - INTERVAL '7 days'
+        `, [req.params.usuario_id]);
+        res.json(stats.rows[0]);
+    } catch (err) { res.status(500).send("Erro."); }
+});
+
 const porta = process.env.PORT || 3000;
-app.listen(porta, () => console.log(`🚀 Servidor rodando na porta ${porta}`));
+app.listen(porta, () => console.log(`🚀 Servidor pronto na porta ${porta}`));
