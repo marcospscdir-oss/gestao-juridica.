@@ -2,89 +2,93 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Painel Executive - Marcos Pedro</title>
+    <title>Gestão Jurídica - Marcos Pedro</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     
     <style>
         :root { 
-            --bg-dark: #0f172a; 
-            --card-dark: #1e293b; 
-            --text-main: #f8fafc;
-            --accent: #38bdf8;
-            --success: #22c55e;
+            --bg-total: #0a0a0a; /* Preto Puro */
+            --card-bg: #161616; /* Cinza Chumbo */
+            --gold: #d4af37;    /* Dourado Clássico */
+            --text: #ffffff;
+            --success: #28a745;
         }
 
         body { 
-            font-family: 'Inter', sans-serif; 
-            background: var(--bg-dark); 
-            color: var(--text-main);
+            font-family: 'Garamond', serif; /* Fonte mais clássica/jurídica */
+            background: var(--bg-total); 
+            color: var(--text);
             margin: 0; padding: 20px; 
             display: flex; flex-direction: column; align-items: center; 
         }
 
         /* BOTÕES SUPERIORES */
         .topo-acoes { display: flex; gap: 15px; margin-bottom: 25px; }
-        .btn-reagendar { background: #ea580c; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-produtividade { background: #0891b2; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-reagendar { background: #8b0000; color: white; border: 1px solid var(--gold); padding: 12px 24px; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .btn-produtividade { background: transparent; color: var(--gold); border: 1px solid var(--gold); padding: 12px 24px; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
 
         .header-pro { 
-            background: var(--card-dark); 
-            padding: 30px; border-radius: 24px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            background: var(--card-bg); 
+            padding: 30px; border-radius: 8px; 
+            border: 1px solid #333;
             width: 100%; max-width: 900px; 
             margin-bottom: 30px;
-            display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap;
+            display: flex; justify-content: space-around; align-items: center; 
+            border-bottom: 3px solid var(--gold);
         }
-
-        .mic-section { text-align: center; flex: 1; }
-        .chart-section { width: 180px; height: 180px; flex: 0 0 180px; }
 
         .mic-btn { 
-            width: 80px; height: 80px; border-radius: 50%; border: none; 
-            background: var(--accent); color: white; font-size: 30px; 
-            cursor: pointer; box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+            width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--gold); 
+            background: transparent; color: var(--gold); font-size: 30px; 
+            cursor: pointer; transition: 0.3s;
         }
+        .mic-btn:hover { background: var(--gold); color: black; }
+
+        /* GRÁFICO */
+        .chart-section { width: 160px; height: 160px; }
 
         /* COLUNAS */
         .dashboard { display: flex; gap: 20px; width: 100%; max-width: 1400px; overflow-x: auto; padding-bottom: 20px; }
         .coluna { 
-            background: var(--card-dark); 
-            border-radius: 20px; padding: 20px; 
+            background: var(--card-bg); 
+            border-radius: 8px; padding: 20px; 
             min-width: 300px; flex: 1;
-            border-top: 4px solid var(--accent);
+            border: 1px solid #222;
         }
-        .coluna h2 { font-size: 1.2rem; color: var(--accent); margin-top: 0; }
+        .coluna h2 { font-size: 1.1rem; color: var(--gold); text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 10px; }
 
         .card-tarefa { 
-            background: #334155; 
-            padding: 16px; border-radius: 12px; 
-            margin-bottom: 12px; border-left: 4px solid var(--accent);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: #222; 
+            padding: 16px; border-radius: 4px; 
+            margin-bottom: 12px; border-left: 4px solid var(--gold);
         }
 
         #calendar { 
-            background: var(--card-dark); color: white;
-            padding: 25px; border-radius: 24px; 
+            background: var(--card-bg); color: white;
+            padding: 25px; border-radius: 8px; border: 1px solid #333;
             width: 100%; max-width: 1400px; margin-top: 30px;
         }
 
-        .btn-card { border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; margin-top: 10px; font-weight: bold; }
+        .btn-card { border: none; padding: 6px 12px; border-radius: 2px; cursor: pointer; margin-top: 10px; font-weight: bold; text-transform: uppercase; font-size: 0.7rem; }
+        
+        /* Ajuste do Calendário para modo escuro */
+        .fc { background: var(--card-bg); color: var(--gold); }
+        .fc-toolbar-title { color: var(--gold) !important; }
     </style>
 </head>
 <body>
 
     <div class="topo-acoes">
-        <button class="btn-reagendar" onclick="reagendarOntem()">🔄 Reagendar Ontem</button>
-        <button class="btn-produtividade" onclick="window.scrollTo(0,0)">📊 Dashboard Real-Time</button>
+        <button class="btn-reagendar" onclick="reagendarOntem()">🔄 Pendências</button>
+        <button class="btn-produtividade" onclick="location.reload()">📊 Atualizar Dashboard</button>
     </div>
 
     <div class="header-pro">
-        <div class="mic-section">
-            <h1 id="boas-vindas" style="margin-top:0">🎙️ Olá!</h1>
+        <div style="text-align: center;">
+            <h1 id="boas-vindas" style="margin-top:0; color: var(--gold);">MARCOS PEDRO</h1>
             <button id="meu-mic" class="mic-btn">🎤</button>
-            <p id="status-texto" style="color: var(--accent)">Sistema Pronto</p>
-            <button onclick="logout()" style="color:#94a3b8; background:none; border:none; cursor:pointer;">Encerrar Sessão</button>
+            <p id="status-texto" style="color: #888">SISTEMA POR VOZ ATIVO</p>
         </div>
 
         <div class="chart-section">
@@ -108,23 +112,23 @@
     let chartProd;
 
     if (!usuarioId) { window.location.href = 'login.html'; }
-    else { document.getElementById('boas-vindas').innerText = `Painel de ${usuarioNome}`; }
+    else { document.getElementById('boas-vindas').innerText = usuarioNome.toUpperCase(); }
 
-    // Inicializa o Gráfico
     function inicializarGrafico(concluidas, pendentes) {
         const ctx = document.getElementById('graficoProdutividade').getContext('2d');
         if (chartProd) chartProd.destroy();
         chartProd = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Concluídas', 'Pendentes'],
+                labels: ['OK', 'Pendente'],
                 datasets: [{
                     data: [concluidas, pendentes],
-                    backgroundColor: ['#22c55e', '#334155'],
-                    borderWidth: 0
+                    backgroundColor: ['#d4af37', '#333'],
+                    borderColor: '#161616',
+                    borderWidth: 2
                 }]
             },
-            options: { cutout: '70%', plugins: { legend: { display: false } } }
+            options: { cutout: '80%', plugins: { legend: { display: false } } }
         });
     }
 
@@ -132,7 +136,6 @@
         const res = await fetch(`${API_URL}/api/lista-tarefas/${usuarioId}`);
         const tarefas = await res.json();
         
-        // Dados para o Gráfico
         const concluidas = tarefas.filter(t => t.status === 'CONCLUÍDA').length;
         const pendentes = tarefas.length - concluidas;
         inicializarGrafico(concluidas, pendentes);
@@ -144,36 +147,31 @@
             historico: document.getElementById('lista-historico')
         };
         Object.values(listas).forEach(l => l.innerHTML = "");
-        const hoje = new Date().toISOString().split('T')[0];
-        const eventos = [];
+        const hojeStr = new Date().toISOString().split('T')[0];
 
         tarefas.forEach(t => {
             const isConcluida = t.status === 'CONCLUÍDA';
             const dataT = t.criado_em.split('T')[0];
             const card = `<div class="card-tarefa">
-                <strong>${t.titulo}</strong><br>
-                <small style="color:var(--accent)">${dataT.split('-').reverse().join('/')}</small>
+                <strong style="color:#ddd">${t.titulo}</strong><br>
+                <small style="color:var(--gold)">${dataT.split('-').reverse().join('/')}</small>
                 <div style="margin-top:10px;">
-                    ${!isConcluida ? `<button class="btn-card" style="background:var(--success); color:white" onclick="concluirTarefa(${t.id})">Concluir</button>` : ''}
-                    <button class="btn-card" style="background:#ef4444; color:white" onclick="excluirTarefa(${t.id})">Excluir</button>
+                    ${!isConcluida ? `<button class="btn-card" style="background:var(--gold); color:black" onclick="concluirTarefa(${t.id})">Concluir</button>` : ''}
+                    <button class="btn-card" style="background:#333; color:white" onclick="excluirTarefa(${t.id})">Remover</button>
                 </div>
             </div>`;
 
             if (isConcluida) listas.historico.innerHTML += card;
             else if (t.titulo.toLowerCase().includes('audiência')) listas.audiencia.innerHTML += card;
-            else if (dataT === hoje) listas.hoje.innerHTML += card;
+            else if (dataT === hojeStr) listas.hoje.innerHTML += card;
             else listas.agendado.innerHTML += card;
-
-            eventos.push({ title: t.titulo, start: dataT });
         });
-        calendar.removeAllEvents(); calendar.addEventSource(eventos);
     }
 
-    // Reconhecimento de Voz
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new Recognition();
     recognition.lang = 'pt-BR';
-    document.getElementById('meu-mic').onclick = () => { recognition.start(); document.getElementById('status-texto').innerText = "Ouvindo Voz..."; };
+    document.getElementById('meu-mic').onclick = () => { recognition.start(); document.getElementById('status-texto').innerText = "OUVINDO..."; };
     recognition.onresult = async (e) => {
         const texto = e.results[0][0].transcript;
         await fetch(`${API_URL}/api/salvar-tarefa`, {
@@ -182,26 +180,24 @@
             body: JSON.stringify({ texto, usuario_id: usuarioId })
         });
         carregarTudo();
-        document.getElementById('status-texto').innerText = "✅ Tarefa Registrada!";
+        document.getElementById('status-texto').innerText = "REGISTRADO";
     };
 
     async function reagendarOntem() {
-        if(confirm("Sincronizar tarefas pendentes de ontem para hoje?")) {
+        if(confirm("Sincronizar tarefas pendentes para hoje?")) {
             await fetch(`${API_URL}/api/reagendar-ontem/${usuarioId}`, { method: 'PUT' });
             carregarTudo();
         }
     }
 
-    let calendar;
     document.addEventListener('DOMContentLoaded', () => {
-        calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { initialView: 'dayGridMonth', themeSystem: 'standard' });
+        calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { initialView: 'dayGridMonth' });
         calendar.render();
         carregarTudo();
     });
 
     async function concluirTarefa(id) { await fetch(`${API_URL}/api/concluir-tarefa/${id}`, { method: 'PUT' }); carregarTudo(); }
     async function excluirTarefa(id) { if(confirm("Excluir?")) { await fetch(`${API_URL}/api/excluir-tarefa/${id}`, { method: 'DELETE' }); carregarTudo(); } }
-    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
     </script>
 </body>
 </html>
