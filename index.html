@@ -2,97 +2,103 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Gestão Jurídica - Marcos Pedro</title>
+    <title>Sistema de Gestão - Laurte Lessa & Marcos Pedro</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
         :root { 
-            --bg-total: #0a0a0a; /* Preto Puro */
-            --card-bg: #161616; /* Cinza Chumbo */
-            --gold: #d4af37;    /* Dourado Clássico */
-            --text: #ffffff;
-            --success: #28a745;
+            --bg-escritorio: #fcfcfc; 
+            --vinho-escuro: #4a0e0e; /* Tom sóbrio para destaques */
+            --dourado: #b8935a;      /* Dourado fiel ao logotipo */
+            --cinza-texto: #333333;
+            --borda: #e1e1e1;
         }
 
         body { 
-            font-family: 'Garamond', serif; /* Fonte mais clássica/jurídica */
-            background: var(--bg-total); 
-            color: var(--text);
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg-escritorio); 
+            color: var(--cinza-texto);
             margin: 0; padding: 20px; 
             display: flex; flex-direction: column; align-items: center; 
         }
 
-        /* BOTÕES SUPERIORES */
+        /* TOPO COM IDENTIDADE VISUAL */
         .topo-acoes { display: flex; gap: 15px; margin-bottom: 25px; }
-        .btn-reagendar { background: #8b0000; color: white; border: 1px solid var(--gold); padding: 12px 24px; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        .btn-produtividade { background: transparent; color: var(--gold); border: 1px solid var(--gold); padding: 12px 24px; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .btn-premium { 
+            border: 1px solid var(--dourado); border-radius: 4px; padding: 10px 25px; 
+            font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+            transition: 0.3s; font-size: 0.75rem;
+        }
+        .btn-reagendar { background: var(--vinho-escuro); color: white; }
+        .btn-produtividade { background: white; color: var(--dourado); }
 
-        .header-pro { 
-            background: var(--card-bg); 
-            padding: 30px; border-radius: 8px; 
-            border: 1px solid #333;
-            width: 100%; max-width: 900px; 
+        .header-box { 
+            background: white; 
+            padding: 30px; border-radius: 4px; 
+            border: 1px solid var(--borda);
+            width: 100%; max-width: 950px; 
             margin-bottom: 30px;
-            display: flex; justify-content: space-around; align-items: center; 
-            border-bottom: 3px solid var(--gold);
+            display: flex; justify-content: space-between; align-items: center;
+            border-top: 5px solid var(--dourado);
         }
 
+        .logo-text { font-family: 'Cinzel', serif; color: var(--vinho-escuro); margin: 0; font-size: 1.5rem; letter-spacing: 2px; }
+        
         .mic-btn { 
-            width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--gold); 
-            background: transparent; color: var(--gold); font-size: 30px; 
+            width: 65px; height: 65px; border-radius: 50%; border: 1px solid var(--dourado); 
+            background: white; color: var(--dourado); font-size: 25px; 
             cursor: pointer; transition: 0.3s;
         }
-        .mic-btn:hover { background: var(--gold); color: black; }
+        .mic-btn:hover { background: var(--dourado); color: white; }
 
-        /* GRÁFICO */
-        .chart-section { width: 160px; height: 160px; }
+        .chart-box { width: 140px; height: 140px; }
 
-        /* COLUNAS */
-        .dashboard { display: flex; gap: 20px; width: 100%; max-width: 1400px; overflow-x: auto; padding-bottom: 20px; }
+        /* DASHBOARD PROFISSIONAL */
+        .dashboard { display: flex; gap: 20px; width: 100%; max-width: 1450px; overflow-x: auto; padding: 10px; }
         .coluna { 
-            background: var(--card-bg); 
-            border-radius: 8px; padding: 20px; 
+            background: white; border: 1px solid var(--borda); border-radius: 4px; padding: 20px; 
             min-width: 300px; flex: 1;
-            border: 1px solid #222;
         }
-        .coluna h2 { font-size: 1.1rem; color: var(--gold); text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .coluna h2 { 
+            font-family: 'Cinzel', serif; font-size: 0.9rem; color: var(--dourado); 
+            margin-top: 0; text-align: center; border-bottom: 1px solid var(--borda);
+            padding-bottom: 15px; margin-bottom: 20px;
+        }
 
         .card-tarefa { 
-            background: #222; 
-            padding: 16px; border-radius: 4px; 
-            margin-bottom: 12px; border-left: 4px solid var(--gold);
+            background: #fafafa; padding: 15px; border-radius: 2px; 
+            margin-bottom: 15px; border-left: 3px solid var(--dourado);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.02); text-align: left;
         }
+        .card-tarefa strong { font-size: 0.95rem; color: #222; }
 
         #calendar { 
-            background: var(--card-bg); color: white;
-            padding: 25px; border-radius: 8px; border: 1px solid #333;
-            width: 100%; max-width: 1400px; margin-top: 30px;
+            background: white; padding: 30px; border-radius: 4px; border: 1px solid var(--borda);
+            width: 100%; max-width: 1450px; margin-top: 30px;
         }
 
-        .btn-card { border: none; padding: 6px 12px; border-radius: 2px; cursor: pointer; margin-top: 10px; font-weight: bold; text-transform: uppercase; font-size: 0.7rem; }
-        
-        /* Ajuste do Calendário para modo escuro */
-        .fc { background: var(--card-bg); color: var(--gold); }
-        .fc-toolbar-title { color: var(--gold) !important; }
+        .btn-card { border: none; padding: 6px 12px; border-radius: 2px; cursor: pointer; margin-top: 10px; font-size: 0.7rem; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
     <div class="topo-acoes">
-        <button class="btn-reagendar" onclick="reagendarOntem()">🔄 Pendências</button>
-        <button class="btn-produtividade" onclick="location.reload()">📊 Atualizar Dashboard</button>
+        <button class="btn-premium btn-reagendar" onclick="reagendarOntem()">Reagendar Pendências</button>
+        <button class="btn-premium btn-produtividade" onclick="location.reload()">Atualizar Dashboard</button>
     </div>
 
-    <div class="header-pro">
-        <div style="text-align: center;">
-            <h1 id="boas-vindas" style="margin-top:0; color: var(--gold);">MARCOS PEDRO</h1>
+    <div class="header-box">
+        <div style="flex: 1;">
+            <h1 class="logo-text" id="boas-vindas">LAURTE LESSA & MARCOS PEDRO</h1>
+            <p style="font-size: 0.8rem; color: #888; margin-top: 5px;">ASSESSORIA JURÍDICA INTELIGENTE</p>
             <button id="meu-mic" class="mic-btn">🎤</button>
-            <p id="status-texto" style="color: #888">SISTEMA POR VOZ ATIVO</p>
+            <p id="status-texto" style="font-size: 0.7rem; margin-top: 8px;">SISTEMA DE VOZ PRONTO</p>
         </div>
 
-        <div class="chart-section">
-            <canvas id="graficoProdutividade"></canvas>
+        <div class="chart-box">
+            <canvas id="graficoVoz"></canvas>
         </div>
     </div>
 
@@ -100,7 +106,7 @@
         <div class="coluna"><h2>📢 Audiências</h2><div id="lista-audiencia"></div></div>
         <div class="coluna"><h2>📅 Para Hoje</h2><div id="lista-hoje"></div></div>
         <div class="coluna"><h2>⏳ Agendados</h2><div id="lista-agendado"></div></div>
-        <div class="coluna"><h2>🧠 Histórico</h2><div id="lista-historico"></div></div>
+        <div class="coluna"><h2>🧠 Concluídas</h2><div id="lista-historico"></div></div>
     </div>
 
     <div id="calendar"></div>
@@ -109,23 +115,22 @@
     const API_URL = 'https://gestao-juridica-9r72.onrender.com';
     const usuarioId = localStorage.getItem('usuario_id');
     const usuarioNome = localStorage.getItem('usuario_nome');
-    let chartProd;
+    let meuChart;
 
     if (!usuarioId) { window.location.href = 'login.html'; }
     else { document.getElementById('boas-vindas').innerText = usuarioNome.toUpperCase(); }
 
-    function inicializarGrafico(concluidas, pendentes) {
-        const ctx = document.getElementById('graficoProdutividade').getContext('2d');
-        if (chartProd) chartProd.destroy();
-        chartProd = new Chart(ctx, {
+    function gerarGrafico(concluidas, pendentes) {
+        const ctx = document.getElementById('graficoVoz').getContext('2d');
+        if (meuChart) meuChart.destroy();
+        meuChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: ['OK', 'Pendente'],
                 datasets: [{
                     data: [concluidas, pendentes],
-                    backgroundColor: ['#d4af37', '#333'],
-                    borderColor: '#161616',
-                    borderWidth: 2
+                    backgroundColor: ['#b8935a', '#f0f0f0'],
+                    borderWidth: 0
                 }]
             },
             options: { cutout: '80%', plugins: { legend: { display: false } } }
@@ -136,9 +141,9 @@
         const res = await fetch(`${API_URL}/api/lista-tarefas/${usuarioId}`);
         const tarefas = await res.json();
         
-        const concluidas = tarefas.filter(t => t.status === 'CONCLUÍDA').length;
-        const pendentes = tarefas.length - concluidas;
-        inicializarGrafico(concluidas, pendentes);
+        const ok = tarefas.filter(t => t.status === 'CONCLUÍDA').length;
+        const p = tarefas.length - ok;
+        gerarGrafico(ok, p);
 
         const listas = {
             audiencia: document.getElementById('lista-audiencia'),
@@ -147,32 +152,31 @@
             historico: document.getElementById('lista-historico')
         };
         Object.values(listas).forEach(l => l.innerHTML = "");
-        const hojeStr = new Date().toISOString().split('T')[0];
+        const hoje = new Date().toISOString().split('T')[0];
 
         tarefas.forEach(t => {
             const isConcluida = t.status === 'CONCLUÍDA';
             const dataT = t.criado_em.split('T')[0];
             const card = `<div class="card-tarefa">
-                <strong style="color:#ddd">${t.titulo}</strong><br>
-                <small style="color:var(--gold)">${dataT.split('-').reverse().join('/')}</small>
+                <strong>${t.titulo.toUpperCase()}</strong><br>
+                <small style="color:var(--dourado); font-weight:bold;">${dataT.split('-').reverse().join('/')}</small>
                 <div style="margin-top:10px;">
-                    ${!isConcluida ? `<button class="btn-card" style="background:var(--gold); color:black" onclick="concluirTarefa(${t.id})">Concluir</button>` : ''}
-                    <button class="btn-card" style="background:#333; color:white" onclick="excluirTarefa(${t.id})">Remover</button>
+                    ${!isConcluida ? `<button class="btn-card" style="background:#b8935a; color:white" onclick="concluir(${t.id})">Concluir</button>` : ''}
+                    <button class="btn-card" style="background:#eee; color:#666" onclick="excluir(${t.id})">Remover</button>
                 </div>
             </div>`;
 
             if (isConcluida) listas.historico.innerHTML += card;
             else if (t.titulo.toLowerCase().includes('audiência')) listas.audiencia.innerHTML += card;
-            else if (dataT === hojeStr) listas.hoje.innerHTML += card;
+            else if (dataT === hoje) listas.hoje.innerHTML += card;
             else listas.agendado.innerHTML += card;
         });
     }
 
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new Recognition();
-    recognition.lang = 'pt-BR';
-    document.getElementById('meu-mic').onclick = () => { recognition.start(); document.getElementById('status-texto').innerText = "OUVINDO..."; };
-    recognition.onresult = async (e) => {
+    const rec = new Recognition(); rec.lang = 'pt-BR';
+    document.getElementById('meu-mic').onclick = () => { rec.start(); document.getElementById('status-texto').innerText = "OUVINDO COMANDO..."; };
+    rec.onresult = async (e) => {
         const texto = e.results[0][0].transcript;
         await fetch(`${API_URL}/api/salvar-tarefa`, {
             method: 'POST',
@@ -180,24 +184,25 @@
             body: JSON.stringify({ texto, usuario_id: usuarioId })
         });
         carregarTudo();
-        document.getElementById('status-texto').innerText = "REGISTRADO";
+        document.getElementById('status-texto').innerText = "✅ REGISTRADO COM SUCESSO";
     };
 
     async function reagendarOntem() {
-        if(confirm("Sincronizar tarefas pendentes para hoje?")) {
+        if(confirm("Deseja sincronizar pendências anteriores para o dia de hoje?")) {
             await fetch(`${API_URL}/api/reagendar-ontem/${usuarioId}`, { method: 'PUT' });
             carregarTudo();
         }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { initialView: 'dayGridMonth' });
+        const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { initialView: 'dayGridMonth', locale: 'pt-br' });
         calendar.render();
         carregarTudo();
     });
 
-    async function concluirTarefa(id) { await fetch(`${API_URL}/api/concluir-tarefa/${id}`, { method: 'PUT' }); carregarTudo(); }
-    async function excluirTarefa(id) { if(confirm("Excluir?")) { await fetch(`${API_URL}/api/excluir-tarefa/${id}`, { method: 'DELETE' }); carregarTudo(); } }
+    async function concluir(id) { await fetch(`${API_URL}/api/concluir-tarefa/${id}`, { method: 'PUT' }); carregarTudo(); }
+    async function excluir(id) { if(confirm("Remover permanentemente?")) { await fetch(`${API_URL}/api/excluir-tarefa/${id}`, { method: 'DELETE' }); carregarTudo(); } }
+    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
     </script>
 </body>
 </html>
