@@ -7,85 +7,73 @@ app.use(cors());
 app.use(express.static(__dirname));
 app.use(express.json());
 
-// CONFIGURAÇÃO DEFINITIVA DO BANCO
 const pool = new Pool({
-    // Usa a variável do Render ou o seu link direto do Neon se rodar local
     connectionString: process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_r6mkt8QLwdoZ@ep-restless-heart-ac4e9km0-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require',
-    ssl: {
-        rejectUnauthorized: false // ESSENCIAL: Resolve o erro de SSL no seu PC e no Render
-    },
-    connectionTimeoutMillis: 20000 // Espera o banco acordar
+    ssl: { rejectUnauthorized: false },
+    connectionTimeoutMillis: 20000
 });
 
 // 1. LOGIN
 app.post('/api/login', async (req, res) => {
     const { email, senha } = req.body;
     try {
-        const usuario = await pool.query(
-            'SELECT id, nome FROM usuarios WHERE email = $1 AND senha = $2', 
-            [email, senha]
-        );
-        if (usuario.rows.length > 0) {
-            res.json(usuario.rows[0]);
-        } else {
-            res.status(401).json({ erro: "E-mail ou senha incorretos." });
-        }
-    } catch (err) { 
-        console.error(err);
-        res.status(500).json({ erro: "Erro ao conectar no banco." }); 
-    }
+        const usuario = await pool.query('SELECT id, nome FROM usuarios WHERE email = $1 AND senha = $2', [email, senha]);
+        if (usuario.rows.length > 0) res.json(usuario.rows[0]);
+        else res.status(401).json({ erro: "Credenciais inválidas" });
+    } catch (err) { res.status(500).json({ erro: "Erro no banco" }); }
 });
 
-// 2. SALVAR TAREFA
+// 2. SALVAR TAREFA (SENSOR DE DATA AUTOMÁTICO)
 app.post('/api/salvar-tarefa', async (req, res) => {
     const { texto, usuario_id } = req.body;
     try {
+        let dataAgendada = new Date(); // Padrão: Hoje
+        
+        // REGEX: Procura qualquer data no formato 00/00 em qualquer lugar da frase
+        const regexData = /(\d{2})\/(\d{2})/;
+        const encontrado = texto.match(regexData);
+        
+        if (encontrado) {
+            const dia = parseInt(encontrado[1]);
+            const mes = parseInt(encontrado[2]) - 1; // Janeiro é 0 no JavaScript
+            
+            // Cria a data para o ano de 2026 (conforme seu projeto)
+            dataAgendada = new Date(2026, mes, dia, 12, 0, 0); 
+            console.log(`Data detectada: ${dataAgendada}`);
+        }
+
         const novaTarefa = await pool.query(
-            'INSERT INTO tarefas (titulo, usuario_id) VALUES ($1, $2) RETURNING *', 
-            [texto, usuario_id]
+            'INSERT INTO tarefas (titulo, usuario_id, criado_em) VALUES ($1, $2, $3) RETURNING *', 
+            [texto, usuario_id, dataAgendada]
         );
         res.status(201).json(novaTarefa.rows[0]);
-    } catch (err) { res.status(500).send("Erro ao salvar."); }
+    } catch (err) { 
+        console.error(err);
+        res.status(500).send("Erro ao salvar."); 
+    }
 });
 
-// 3. LISTAR TAREFAS
+// 3. LISTAR TAREFAS (ORDENADO POR DATA)
 app.get('/api/lista-tarefas/:usuario_id', async (req, res) => {
-    const { usuario_id } = req.params;
     try {
         const resultado = await pool.query(
-            'SELECT * FROM tarefas WHERE usuario_id = $1 ORDER BY criado_em DESC', 
-            [usuario_id]
+            'SELECT * FROM tarefas WHERE usuario_id = $1 ORDER BY criado_em ASC', 
+            [req.params.usuario_id]
         );
         res.json(resultado.rows);
     } catch (err) { res.status(500).send("Erro ao buscar."); }
 });
 
-// 4. CONCLUIR TAREFA
+// 4. CONCLUIR E 5. EXCLUIR (MANTIDOS)
 app.put('/api/concluir-tarefa/:id', async (req, res) => {
-    try {
-        await pool.query("UPDATE tarefas SET status = 'CONCLUÍDA' WHERE id = $1", [req.params.id]);
-        res.json({ mensagem: "OK" });
-    } catch (err) { res.status(500).send("Erro."); }
+    await pool.query("UPDATE tarefas SET status = 'CONCLUÍDA' WHERE id = $1", [req.params.id]);
+    res.json({ mensagem: "OK" });
 });
 
-// 5. EXCLUIR TAREFA
 app.delete('/api/excluir-tarefa/:id', async (req, res) => {
-    try {
-        await pool.query('DELETE FROM tarefas WHERE id = $1', [req.params.id]);
-        res.json({ mensagem: "Excluída" });
-    } catch (err) { res.status(500).send("Erro."); }
-});
-
-// 6. RELATÓRIO
-app.get('/api/relatorio/:usuario_id', async (req, res) => {
-    try {
-        const stats = await pool.query(`
-            SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE status = 'CONCLUÍDA') as concluidas
-            FROM tarefas WHERE usuario_id = $1 AND criado_em > NOW() - INTERVAL '7 days'
-        `, [req.params.usuario_id]);
-        res.json(stats.rows[0]);
-    } catch (err) { res.status(500).send("Erro."); }
+    await pool.query('DELETE FROM tarefas WHERE id = $1', [req.params.id]);
+    res.json({ mensagem: "Excluída" });
 });
 
 const porta = process.env.PORT || 3000;
-app.listen(porta, () => console.log(`🚀 Servidor pronto na porta ${porta}`));
+app.listen(porta, () => console.log(`🚀 Sistema Inteligente na porta ${porta}`));
