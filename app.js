@@ -12,29 +12,27 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
-// 1. LOGIN COM OS 3 ACESSOS ATIVOS
+// 1. LOGIN COM SENHAS EXCLUSIVAS POR PARCEIRO
 app.post('/api/login', async (req, res) => {
     const { email, senha } = req.body;
     
-    // Lista oficial de usuários permitidos
+    // Configuração de acessos individuais
     const usuariosPermitidos = [
-        { id: 1, nome: 'Marcos Pedro', email: 'marcospsc.dir@gmail.com', senha: 'admin1640' },
-        { id: 2, nome: 'Laurte Leandro', email: 'laurte.adv@gmail.com', senha: 'admin1640' },
+        { id: 1, nome: 'Marcos Pedro', email: 'marcospsc.dir@gmail.com', senha: 'admin1205' },
+        { id: 2, nome: 'Laurte Leandro', email: 'laurte.adv@gmail.com', senha: 'admin9222' },
         { id: 3, nome: 'Vieira Advocacia', email: 'vieiraadvocacia2018@gmail.com', senha: 'admin1640' }
     ];
 
-    // Procura se o e-mail e senha batem com algum da lista
     const usuarioEncontrado = usuariosPermitidos.find(u => u.email === email && u.senha === senha);
 
     if (usuarioEncontrado) {
-        // Envia apenas o ID e o Nome para o sistema
         res.json({ id: usuarioEncontrado.id, nome: usuarioEncontrado.nome });
     } else {
         res.status(401).json({ erro: "E-mail ou senha incorretos." });
     }
 });
 
-// 2. SALVAR TAREFA (COM INTELIGÊNCIA DE DATA)
+// 2. SALVAR TAREFA (INTELIGÊNCIA DE DATA)
 app.post('/api/salvar-tarefa', async (req, res) => {
     const { texto, usuario_id } = req.body;
     try {
