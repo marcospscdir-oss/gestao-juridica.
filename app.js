@@ -1,22 +1,36 @@
 const express = require('express');
 const { Pool } = require('pg'); 
 const cors = require('cors');
+const https = require('https'); // Adicionado para o anti-sono
 const app = express();
 
 app.use(cors());
 app.use(express.static(__dirname));
 app.use(express.json());
 
+// Configuração do Banco de Dados Otimizada
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    ssl: { rejectUnauthorized: false },
+    max: 20, // Aumenta o limite de conexões simultâneas
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
 });
 
-// 1. LOGIN COM SENHAS EXCLUSIVAS POR PARCEIRO
+// --- FUNÇÃO ANTI-SONO (KEEP-ALIVE) ---
+// Isso faz o servidor visitar a si mesmo para não desligar no Render
+const URL_APP = 'https://gestao-juridica-9r72.onrender.com';
+setInterval(() => {
+    https.get(URL_APP, (res) => {
+        console.log('Mantendo o servidor acordado...');
+    }).on('error', (err) => {
+        console.error('Erro no keep-alive:', err.message);
+    });
+}, 300000); // Executa a cada 5 minutos
+
+// 1. LOGIN COM SENHAS EXCLUSIVAS
 app.post('/api/login', async (req, res) => {
     const { email, senha } = req.body;
-    
-    // Configuração de acessos individuais
     const usuariosPermitidos = [
         { id: 1, nome: 'Marcos Pedro', email: 'marcospsc.dir@gmail.com', senha: 'admin1205' },
         { id: 2, nome: 'Laurte Leandro', email: 'laurte.adv@gmail.com', senha: 'admin9222' },
@@ -71,7 +85,7 @@ app.post('/api/salvar-tarefa', async (req, res) => {
     } catch (err) { res.status(500).send("Erro ao salvar."); }
 });
 
-// 3. LISTAR TAREFAS
+// 3. LISTAR TAREFAS (COM CACHE MÍNIMO)
 app.get('/api/lista-tarefas/:usuario_id', async (req, res) => {
     try {
         const resultado = await pool.query('SELECT * FROM tarefas WHERE usuario_id = $1 ORDER BY criado_em ASC', [req.params.usuario_id]);
@@ -79,15 +93,19 @@ app.get('/api/lista-tarefas/:usuario_id', async (req, res) => {
     } catch (err) { res.status(500).send("Erro ao listar."); }
 });
 
-// 4. CONCLUIR E EXCLUIR
+// 4. CONCLUIR E EXCLUIR (RESPOSTA RÁPIDA)
 app.put('/api/concluir-tarefa/:id', async (req, res) => {
-    await pool.query("UPDATE tarefas SET status = 'CONCLUÍDA' WHERE id = $1", [req.params.id]);
-    res.json({ mensagem: "OK" });
+    try {
+        await pool.query("UPDATE tarefas SET status = 'CONCLUÍDA' WHERE id = $1", [req.params.id]);
+        res.json({ mensagem: "OK" });
+    } catch (err) { res.status(500).send("Erro"); }
 });
 
 app.delete('/api/excluir-tarefa/:id', async (req, res) => {
-    await pool.query('DELETE FROM tarefas WHERE id = $1', [req.params.id]);
-    res.json({ mensagem: "OK" });
+    try {
+        await pool.query('DELETE FROM tarefas WHERE id = $1', [req.params.id]);
+        res.json({ mensagem: "OK" });
+    } catch (err) { res.status(500).send("Erro"); }
 });
 
 // 5. REAGENDAR ONTEM
@@ -119,4 +137,4 @@ app.get('/api/relatorio/:usuario_id', async (req, res) => {
 });
 
 const porta = process.env.PORT || 3000;
-app.listen(porta, () => console.log(`🚀 Sistema Online na porta ${porta}`));
+app.listen(porta, () => console.log(`🚀 Sistema Online e Anti-Sono Ativo na porta ${porta}`));
