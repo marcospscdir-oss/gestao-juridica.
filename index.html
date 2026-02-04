@@ -2,77 +2,114 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema de Gestão - Lessa & Pedro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão Jurídica - Laurte Lessa</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --dourado: #b8935a; --vinho: #4a0e0e; --bg: #fcfcfc; }
+        :root { --bg: #fcfcfc; --vinho: #4a0e0e; --dourado: #b8935a; --borda: #e1e1e1; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .header-box { background: white; padding: 20px; border-radius: 8px; border-top: 5px solid var(--dourado); width: 100%; max-width: 950px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .dashboard { display: flex; gap: 15px; width: 100%; max-width: 1400px; overflow-x: auto; }
-        .coluna { background: white; padding: 15px; border-radius: 6px; border: 1px solid #eee; min-width: 280px; flex: 1; }
-        .coluna h2 { font-family: 'Cinzel'; font-size: 0.8rem; color: var(--dourado); border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .card { background: #fafafa; padding: 12px; margin-bottom: 10px; border-left: 4px solid var(--dourado); font-size: 0.85rem; }
-        .mic-btn { font-size: 24px; background: white; border: 1px solid var(--dourado); border-radius: 50%; width: 50px; height: 50px; cursor: pointer; }
+        .topo-acoes { display: flex; gap: 15px; margin-bottom: 25px; }
+        .btn-premium { border: 1px solid var(--dourado); border-radius: 4px; padding: 10px 25px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 0.75rem; }
+        .btn-reagendar { background: var(--vinho); color: white; }
+        .btn-produtividade { background: white; color: var(--dourado); }
+        .header-box { background: white; padding: 30px; border-radius: 4px; border: 1px solid var(--borda); width: 100%; max-width: 950px; margin-bottom: 30px; display: flex; flex-direction: column; align-items: center; border-top: 5px solid var(--dourado); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .logo-img { max-width: 280px; height: auto; margin-bottom: 20px; }
+        .mic-btn { width: 65px; height: 65px; border-radius: 50%; border: 1px solid var(--dourado); background: white; color: var(--dourado); font-size: 25px; cursor: pointer; }
+        .header-flex { display: flex; width: 100%; justify-content: space-around; align-items: center; flex-wrap: wrap; }
+        .chart-box { width: 140px; height: 140px; }
+        .dashboard { display: flex; gap: 20px; width: 100%; max-width: 1450px; overflow-x: auto; padding: 10px; }
+        .coluna { background: white; border: 1px solid var(--borda); border-radius: 4px; padding: 20px; min-width: 280px; flex: 1; }
+        .coluna h2 { font-family: 'Cinzel', serif; font-size: 0.9rem; color: var(--dourado); text-align: center; border-bottom: 1px solid var(--borda); padding-bottom: 15px; margin-bottom: 20px; }
+        .card-tarefa { background: #fafafa; padding: 15px; border-radius: 2px; margin-bottom: 15px; border-left: 3px solid var(--dourado); box-shadow: 2px 2px 5px rgba(0,0,0,0.02); }
+        .btn-card { border: none; padding: 6px 12px; border-radius: 2px; cursor: pointer; margin-top: 10px; font-size: 0.7rem; text-transform: uppercase; }
+        #calendar { background: white; padding: 20px; border-radius: 4px; border: 1px solid var(--borda); width: 100%; max-width: 1450px; margin-top: 30px; }
     </style>
 </head>
 <body>
+    <div class="topo-acoes">
+        <button class="btn-premium btn-reagendar">Reagendar Pendências</button>
+        <button class="btn-premium btn-produtividade" onclick="window.location.reload(true)">Atualizar Dados</button>
+    </div>
+
     <div class="header-box">
-        <h2 style="font-family: 'Cinzel'; color: var(--vinho);">PAINEL: <span id="user-name">...</span></h2>
-        <button id="btn-mic" class="mic-btn">🎤</button>
-        <p id="status" style="font-size: 0.7rem; color: #888;">CLIQUE PARA FALAR</p>
+        <img src="logo.png" alt="Logo" class="logo-img">
+        <div class="header-flex">
+            <div style="text-align: center; min-width: 250px;">
+                <p style="font-family: 'Cinzel', serif; font-size: 0.9rem; color: var(--dourado); letter-spacing: 2px;">PAINEL DE <span id="nome-usuario">...</span></p>
+                <button id="meu-mic" class="mic-btn">🎤</button>
+                <p id="status-texto" style="font-size: 0.7rem; color: #888;">SISTEMA PRONTO</p>
+                <button onclick="logout()" style="background:none; border:none; color:#999; cursor:pointer; font-size: 0.7rem; margin-top: 10px;">Sair</button>
+            </div>
+            <div class="chart-box"><canvas id="graficoProdutividade"></canvas></div>
+        </div>
     </div>
 
     <div class="dashboard">
-        <div class="coluna"><h2>📢 Audiências</h2><div id="lista-aud"></div></div>
+        <div class="coluna"><h2>📢 Audiências</h2><div id="lista-audiencia"></div></div>
         <div class="coluna"><h2>📅 Para Hoje</h2><div id="lista-hoje"></div></div>
-        <div class="coluna"><h2>⏳ Agendados</h2><div id="lista-agend"></div></div>
-        <div class="coluna"><h2>🧠 Histórico</h2><div id="lista-hist"></div></div>
+        <div class="coluna"><h2>⏳ Agendados</h2><div id="lista-agendado"></div></div>
+        <div class="coluna"><h2>🧠 Histórico</h2><div id="lista-historico"></div></div>
     </div>
+    <div id="calendar"></div>
 
     <script>
-        const API_URL = 'https://gestao-juridica-9r72.onrender.com';
-        const usuarioId = localStorage.getItem('usuario_id');
-        document.getElementById('user-name').innerText = localStorage.getItem('usuario_nome');
+    const API_URL = 'https://gestao-juridica-9r72.onrender.com';
+    const usuarioId = localStorage.getItem('usuario_id');
+    const usuarioNome = localStorage.getItem('usuario_nome');
+    let chartObj, calendar;
 
-        async function carregar() {
-            const res = await fetch(`${API_URL}/api/lista-tarefas/${usuarioId}`);
-            const tarefas = await res.json();
-            const hoje = new Date().toLocaleDateString('en-CA');
+    if (!usuarioId) { window.location.href = 'login.html'; }
+    else { document.getElementById('nome-usuario').innerText = usuarioNome.toUpperCase(); }
+
+    function atualizarGrafico(ok, pend) {
+        const ctx = document.getElementById('graficoProdutividade').getContext('2d');
+        if (chartObj) chartObj.destroy();
+        chartObj = new Chart(ctx, { type: 'doughnut', data: { labels: ['OK', 'Pendente'], datasets: [{ data: [ok, pend], backgroundColor: ['#b8935a', '#f0f0f0'], borderWidth: 0 }] }, options: { cutout: '80%', plugins: { legend: { display: false } } } });
+    }
+
+    async function carregarTudo() {
+        const res = await fetch(`${API_URL}/api/lista-tarefas/${usuarioId}`);
+        const tarefas = await res.json();
+        const listas = { aud: document.getElementById('lista-audiencia'), hoje: document.getElementById('lista-hoje'), agend: document.getElementById('lista-agendado'), hist: document.getElementById('lista-historico') };
+        Object.values(listas).forEach(l => l.innerHTML = "");
+        const hojeStr = new Date().toLocaleDateString('en-CA');
+        const eventos = [];
+        let ok = 0;
+
+        tarefas.forEach(t => {
+            const isC = t.status === 'CONCLUÍDA', dataT = t.criado_em.split('T')[0];
+            if(isC) ok++;
+            const card = `<div class="card-tarefa"><strong>${t.titulo.toUpperCase()}</strong><br><small style="color:var(--dourado)">${dataT.split('-').reverse().join('/')}</small><br>${!isC ? `<button class="btn-card" style="background:var(--dourado);color:white" onclick="concluir(${t.id})">Concluir</button>` : ''} <button class="btn-card" style="background:#eee" onclick="excluir(${t.id})">Remover</button></div>`;
             
-            const lists = { aud: document.getElementById('lista-aud'), hoje: document.getElementById('lista-hoje'), agend: document.getElementById('lista-agend'), hist: document.getElementById('lista-hist') };
-            Object.values(lists).forEach(l => l.innerHTML = "");
+            if (isC) listas.hist.innerHTML += card;
+            else if (t.titulo.toLowerCase().includes('audiência')) listas.aud.innerHTML += card;
+            else if (dataT === hojeStr) listas.hoje.innerHTML += card;
+            else listas.agend.innerHTML += card;
+            eventos.push({ title: t.titulo, start: dataT, color: isC ? '#28a745' : '#b8935a' });
+        });
+        atualizarGrafico(ok, tarefas.length - ok);
+        calendar.removeAllEvents(); calendar.addEventSource(eventos);
+    }
 
-            tarefas.forEach(t => {
-                const isC = t.status === 'CONCLUÍDA', dataT = t.criado_em.split('T')[0];
-                const card = `<div class="card"><strong>${t.titulo}</strong><br>
-                <button onclick="concluir(${t.id})">OK</button> <button onclick="excluir(${t.id})">X</button></div>`;
-                
-                if (isC) lists.hist.innerHTML += card;
-                else if (t.titulo.toLowerCase().includes('audiência')) lists.aud.innerHTML += card;
-                else if (dataT === hoje) lists.hoje.innerHTML += card;
-                else lists.agend.innerHTML += card;
-            });
-        }
+    const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    rec.lang = 'pt-BR';
+    document.getElementById('meu-mic').onclick = () => { rec.start(); document.getElementById('status-texto').innerText = "OUVINDO..."; };
+    rec.onresult = async (e) => {
+        const texto = e.results[0][0].transcript;
+        await fetch(`${API_URL}/api/salvar-tarefa`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ texto, usuario_id: usuarioId }) });
+        carregarTudo(); document.getElementById('status-texto').innerText = "✅ REGISTRADO";
+    };
 
-        const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        rec.lang = 'pt-BR';
-        document.getElementById('btn-mic').onclick = () => { rec.start(); document.getElementById('status').innerText = "OUVINDO..."; };
-        rec.onresult = async (e) => {
-            const texto = e.results[0][0].transcript;
-            document.getElementById('status').innerText = "SALVANDO...";
-            await fetch(`${API_URL}/api/salvar-tarefa`, { 
-                method: 'POST', 
-                headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({ texto, usuario_id: usuarioId }) 
-            });
-            carregar();
-            document.getElementById('status').innerText = "✅ SALVO!";
-        };
+    async function concluir(id) { await fetch(`${API_URL}/api/concluir-tarefa/${id}`, {method:'PUT'}); carregarTudo(); }
+    async function excluir(id) { if(confirm("Remover?")) { await fetch(`${API_URL}/api/excluir-tarefa/${id}`, {method:'DELETE'}); carregarTudo(); } }
+    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
 
-        async function concluir(id) { await fetch(`${API_URL}/api/concluir-tarefa/${id}`, {method:'PUT'}); carregar(); }
-        async function excluir(id) { await fetch(`${API_URL}/api/excluir-tarefa/${id}`, {method:'DELETE'}); carregar(); }
-        carregar();
+    document.addEventListener('DOMContentLoaded', () => {
+        calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { initialView: 'dayGridMonth', locale: 'pt-br' });
+        calendar.render(); carregarTudo();
+    });
     </script>
 </body>
 </html>
