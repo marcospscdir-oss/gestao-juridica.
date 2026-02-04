@@ -2,7 +2,8 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema de Gestão - Laurte Lessa & Marcos Pedro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão Jurídica</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -10,7 +11,7 @@
     <style>
         :root { --bg-escritorio: #fcfcfc; --vinho-escuro: #4a0e0e; --dourado: #b8935a; --cinza-texto: #333333; --borda: #e1e1e1; }
         body { font-family: 'Inter', sans-serif; background: var(--bg-escritorio); color: var(--cinza-texto); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .topo-acoes { display: flex; gap: 15px; margin-bottom: 25px; }
+        .topo-acoes { display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; justify-content: center; }
         .btn-premium { border: 1px solid var(--dourado); border-radius: 4px; padding: 10px 25px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; font-size: 0.75rem; }
         .btn-reagendar { background: var(--vinho-escuro); color: white; }
         .btn-produtividade { background: white; color: var(--dourado); }
@@ -20,10 +21,10 @@
         .header-flex { display: flex; width: 100%; justify-content: space-around; align-items: center; flex-wrap: wrap; }
         .chart-box { width: 140px; height: 140px; }
         .dashboard { display: flex; gap: 20px; width: 100%; max-width: 1450px; overflow-x: auto; padding: 10px; }
-        .coluna { background: white; border: 1px solid var(--borda); border-radius: 4px; padding: 20px; min-width: 300px; flex: 1; }
+        .coluna { background: white; border: 1px solid var(--borda); border-radius: 4px; padding: 20px; min-width: 280px; flex: 1; }
         .coluna h2 { font-family: 'Cinzel', serif; font-size: 0.9rem; color: var(--dourado); margin-top: 0; text-align: center; border-bottom: 1px solid var(--borda); padding-bottom: 15px; margin-bottom: 20px; }
         .card-tarefa { background: #fafafa; padding: 15px; border-radius: 2px; margin-bottom: 15px; border-left: 3px solid var(--dourado); box-shadow: 2px 2px 5px rgba(0,0,0,0.02); text-align: left; }
-        #calendar { background: white; padding: 30px; border-radius: 4px; border: 1px solid var(--borda); width: 100%; max-width: 1450px; margin-top: 30px; }
+        #calendar { background: white; padding: 20px; border-radius: 4px; border: 1px solid var(--borda); width: 100%; max-width: 1450px; margin-top: 30px; min-height: 500px; }
         .btn-card { border: none; padding: 6px 12px; border-radius: 2px; cursor: pointer; margin-top: 10px; font-size: 0.7rem; text-transform: uppercase; }
     </style>
 </head>
@@ -31,18 +32,18 @@
 
     <div class="topo-acoes">
         <button class="btn-premium btn-reagendar" onclick="reagendarOntem()">Reagendar Pendências</button>
-        <button class="btn-premium btn-produtividade" onclick="location.reload()">Atualizar Dashboard</button>
+        <button class="btn-premium btn-produtividade" onclick="window.location.reload(true)">Forçar Atualização</button>
     </div>
 
     <div class="header-box">
-        <img src="logo.png" alt="Laurte Lessa Advogados" class="logo-img">
+        <img src="logo.png" alt="Logo" class="logo-img" onerror="this.style.display='none'">
         <div class="header-flex">
             <div style="text-align: center; min-width: 250px;">
                 <p style="font-family: 'Cinzel', serif; font-size: 0.9rem; color: var(--dourado); margin: 0; letter-spacing: 2px;">
-                    PAINEL DE <span id="nome-usuario">...</span>
+                    PAINEL DE <span id="nome-usuario">USUÁRIO</span>
                 </p>
                 <button id="meu-mic" class="mic-btn">🎤</button>
-                <p id="status-texto" style="font-size: 0.7rem; color: #888; margin: 0;">SISTEMA DE VOZ PRONTO</p>
+                <p id="status-texto" style="font-size: 0.7rem; color: #888; margin: 0;">SISTEMA PRONTO</p>
                 <button onclick="logout()" style="background:none; border:none; color:#999; cursor:pointer; font-size: 0.7rem; margin-top: 10px;">Encerrar Sessão</button>
             </div>
             <div class="chart-box">
@@ -67,8 +68,12 @@
     let chartObj;
     let calendar;
 
-    if (!usuarioId) { window.location.href = 'login.html'; }
-    else { document.getElementById('nome-usuario').innerText = usuarioNome.toUpperCase(); }
+    // Proteção de Login
+    if (!usuarioId) { 
+        window.location.href = 'login.html'; 
+    } else { 
+        document.getElementById('nome-usuario').innerText = usuarioNome.toUpperCase(); 
+    }
 
     function atualizarGrafico(concluidas, pendentes) {
         const ctx = document.getElementById('graficoProdutividade').getContext('2d');
@@ -85,7 +90,9 @@
 
     async function carregarTudo() {
         try {
+            console.log("Buscando tarefas para ID:", usuarioId);
             const res = await fetch(`${API_URL}/api/lista-tarefas/${usuarioId}`);
+            if (!res.ok) throw new Error("Falha na rede");
             const tarefas = await res.json();
             
             const okCount = tarefas.filter(t => t.status === 'CONCLUÍDA').length;
@@ -100,7 +107,7 @@
             };
             Object.values(listas).forEach(l => l.innerHTML = "");
             
-            const hojeStr = new Date().toISOString().split('T')[0];
+            const hojeStr = new Date().toLocaleDateString('en-CA'); // Formato YYYY-MM-DD local
             const eventosParaCalendario = [];
 
             tarefas.forEach(t => {
@@ -121,41 +128,69 @@
                 else if (dataTarefa === hojeStr) listas.hoje.innerHTML += card;
                 else listas.agendado.innerHTML += card;
 
-                eventosParaCalendario.push({ title: t.titulo, start: dataTarefa, color: isConcluida ? '#28a745' : '#b8935a' });
+                eventosParaCalendario.push({ title: t.titulo.toUpperCase(), start: dataTarefa, color: isConcluida ? '#28a745' : '#b8935a' });
             });
 
             if (calendar) {
                 calendar.removeAllEvents();
                 calendar.addEventSource(eventosParaCalendario);
             }
-        } catch (err) { console.error("Erro ao carregar:", err); }
+        } catch (err) { 
+            console.error("Erro ao carregar:", err);
+        }
     }
 
+    // VOZ COM RE-TENTATIVA
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const rec = new Recognition(); rec.lang = 'pt-BR';
-    document.getElementById('meu-mic').onclick = () => { rec.start(); document.getElementById('status-texto').innerText = "OUVINDO..."; };
-    rec.onresult = async (e) => {
-        const texto = e.results[0][0].transcript;
-        await fetch(`${API_URL}/api/salvar-tarefa`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ texto, usuario_id: usuarioId })
-        });
-        carregarTudo();
-        document.getElementById('status-texto').innerText = "REGISTRADO";
-    };
+    if (Recognition) {
+        const rec = new Recognition();
+        rec.lang = 'pt-BR';
+        rec.continuous = false;
+
+        document.getElementById('meu-mic').onclick = () => { 
+            rec.start(); 
+            document.getElementById('status-texto').innerText = "OUVINDO..."; 
+        };
+
+        rec.onresult = async (e) => {
+            const texto = e.results[0][0].transcript;
+            document.getElementById('status-texto').innerText = "PROCESSANDO...";
+            
+            try {
+                const res = await fetch(`${API_URL}/api/salvar-tarefa`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ texto, usuario_id: usuarioId })
+                });
+
+                if (res.ok) {
+                    document.getElementById('status-texto').innerText = "✅ REGISTRADO";
+                    setTimeout(carregarTudo, 500);
+                } else {
+                    document.getElementById('status-texto').innerText = "❌ ERRO AO SALVAR";
+                }
+            } catch (err) {
+                document.getElementById('status-texto').innerText = "⚠️ FALHA DE CONEXÃO";
+            }
+        };
+
+        rec.onerror = () => { document.getElementById('status-texto').innerText = "❌ ERRO NO MIC"; };
+    }
 
     async function reagendarOntem() {
-        if(confirm("Sincronizar tarefas pendentes para hoje?")) {
+        if(confirm("Sincronizar tarefas pendentes?")) {
             await fetch(`${API_URL}/api/reagendar-ontem/${usuarioId}`, { method: 'PUT' });
             carregarTudo();
         }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { 
-            initialView: 'dayGridMonth', locale: 'pt-br',
-            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,dayGridWeek' }
+        const calendarEl = document.getElementById('calendar');
+        calendar = new FullCalendar.Calendar(calendarEl, { 
+            initialView: 'dayGridMonth', 
+            locale: 'pt-br',
+            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,dayGridWeek' },
+            height: 'auto'
         });
         calendar.render();
         carregarTudo();
