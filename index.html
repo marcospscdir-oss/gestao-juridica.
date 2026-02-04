@@ -40,12 +40,18 @@
             border: 1px solid var(--borda);
             width: 100%; max-width: 950px; 
             margin-bottom: 30px;
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex; flex-direction: column; align-items: center;
             border-top: 5px solid var(--dourado);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
-        .logo-text { font-family: 'Cinzel', serif; color: var(--vinho-escuro); margin: 0; font-size: 1.5rem; letter-spacing: 2px; }
-        
+        .logo-img {
+            max-width: 280px;
+            height: auto;
+            margin-bottom: 20px;
+            display: block;
+        }
+
         .mic-btn { 
             width: 65px; height: 65px; border-radius: 50%; border: 1px solid var(--dourado); 
             background: white; color: var(--dourado); font-size: 25px; 
@@ -53,7 +59,15 @@
         }
         .mic-btn:hover { background: var(--dourado); color: white; }
 
-        .chart-box { width: 150px; height: 150px; }
+        .header-flex {
+            display: flex;
+            width: 100%;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .chart-box { width: 140px; height: 140px; }
 
         /* DASHBOARD */
         .dashboard { display: flex; gap: 20px; width: 100%; max-width: 1450px; overflow-x: auto; padding: 10px; }
@@ -89,16 +103,21 @@
     </div>
 
     <div class="header-box">
-        <div style="flex: 1; text-align: left;">
-            <h1 class="logo-text" id="boas-vindas">LAURTE LESSA & MARCOS PEDRO</h1>
-            <p style="font-size: 0.8rem; color: #888; margin-top: 5px; letter-spacing: 1px;">ASSESSORIA JURÍDICA INTELIGENTE</p>
-            <button id="meu-mic" class="mic-btn">🎤</button>
-            <p id="status-texto" style="font-size: 0.7rem; margin: 0;">SISTEMA DE VOZ ATIVO</p>
-            <button onclick="logout()" style="background:none; border:none; color:#999; cursor:pointer; font-size: 0.7rem; margin-top: 10px;">Sair do Sistema</button>
-        </div>
+        <img src="logo.png" alt="Laurte Lessa Advogados" class="logo-img">
+        
+        <div class="header-flex">
+            <div style="text-align: center; min-width: 250px;">
+                <p style="font-family: 'Cinzel', serif; font-size: 0.9rem; color: var(--dourado); margin: 0; letter-spacing: 2px;">
+                    PAINEL DE <span id="nome-usuario">CARREGANDO...</span>
+                </p>
+                <button id="meu-mic" class="mic-btn">🎤</button>
+                <p id="status-texto" style="font-size: 0.7rem; color: #888; margin: 0;">SISTEMA DE VOZ ATIVO</p>
+                <button onclick="logout()" style="background:none; border:none; color:#999; cursor:pointer; font-size: 0.7rem; margin-top: 10px;">Encerrar Sessão</button>
+            </div>
 
-        <div class="chart-box">
-            <canvas id="graficoProdutividade"></canvas>
+            <div class="chart-box">
+                <canvas id="graficoProdutividade"></canvas>
+            </div>
         </div>
     </div>
 
@@ -119,7 +138,7 @@
     let calendar;
 
     if (!usuarioId) { window.location.href = 'login.html'; }
-    else { document.getElementById('boas-vindas').innerText = usuarioNome.toUpperCase(); }
+    else { document.getElementById('nome-usuario').innerText = usuarioNome.toUpperCase(); }
 
     function atualizarGrafico(concluidas, pendentes) {
         const ctx = document.getElementById('graficoProdutividade').getContext('2d');
@@ -142,7 +161,6 @@
         const res = await fetch(`${API_URL}/api/lista-tarefas/${usuarioId}`);
         const tarefas = await res.json();
         
-        // Estatísticas do Gráfico
         const okCount = tarefas.filter(t => t.status === 'CONCLUÍDA').length;
         const pCount = tarefas.length - okCount;
         atualizarGrafico(okCount, pCount);
@@ -160,7 +178,7 @@
 
         tarefas.forEach(t => {
             const isConcluida = t.status === 'CONCLUÍDA';
-            const dataTarefa = t.criado_em.split('T')[0]; // IMPORTANTE: Corrige o registro no calendário
+            const dataTarefa = t.criado_em.split('T')[0];
 
             const card = `<div class="card-tarefa">
                 <strong>${t.titulo.toUpperCase()}</strong><br>
@@ -176,7 +194,6 @@
             else if (dataTarefa === hojeStr) listas.hoje.innerHTML += card;
             else listas.agendado.innerHTML += card;
 
-            // Alimenta o Calendário com TODAS as tarefas (Antigas e Novas)
             eventosParaCalendario.push({
                 title: t.titulo,
                 start: dataTarefa,
@@ -188,7 +205,6 @@
         calendar.addEventSource(eventosParaCalendario);
     }
 
-    // VOZ
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const rec = new Recognition(); rec.lang = 'pt-BR';
     document.getElementById('meu-mic').onclick = () => { rec.start(); document.getElementById('status-texto').innerText = "OUVINDO..."; };
