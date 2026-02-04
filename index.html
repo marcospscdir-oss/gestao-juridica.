@@ -2,138 +2,77 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Gestão Jurídica - Lessa & Pedro</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Sistema de Gestão - Lessa & Pedro</title>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --dourado: #b8935a; --vinho: #4a0e0e; --bg: #fcfcfc; --borda: #e1e1e1; }
+        :root { --dourado: #b8935a; --vinho: #4a0e0e; --bg: #fcfcfc; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .header-box { background: white; padding: 25px; border-radius: 8px; border-top: 5px solid var(--dourado); box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 950px; text-align: center; margin-bottom: 20px; }
-        .logo-img { max-width: 250px; margin-bottom: 15px; }
-        
-        .input-area { margin: 20px 0; display: flex; gap: 10px; justify-content: center; width: 100%; }
-        input[type="text"] { padding: 12px; border: 1px solid #ddd; border-radius: 4px; width: 60%; font-family: 'Inter'; }
-        
-        .mic-btn { font-size: 24px; background: white; border: 1px solid var(--dourado); border-radius: 50%; width: 50px; height: 50px; cursor: pointer; transition: 0.3s; }
-        .mic-btn:hover { background: var(--dourado); color: white; }
-
-        /* DASHBOARD 4 COLUNAS */
-        .dashboard { display: flex; gap: 15px; width: 100%; max-width: 1400px; overflow-x: auto; padding-bottom: 20px; }
-        .coluna { background: white; padding: 15px; border-radius: 6px; border: 1px solid var(--borda); min-width: 280px; flex: 1; }
-        .coluna h2 { font-family: 'Cinzel'; font-size: 0.85rem; color: var(--dourado); border-bottom: 1px solid #eee; padding-bottom: 10px; text-align: center; }
-        
-        .card { background: #fafafa; padding: 12px; margin-bottom: 12px; border-left: 4px solid var(--dourado); border-radius: 2px; font-size: 0.85rem; }
-        .btn-vinho { background: var(--vinho); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        
-        #calendar { background: white; padding: 20px; border-radius: 8px; width: 100%; max-width: 1400px; border: 1px solid var(--borda); margin-top: 20px; }
+        .header-box { background: white; padding: 20px; border-radius: 8px; border-top: 5px solid var(--dourado); width: 100%; max-width: 950px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .dashboard { display: flex; gap: 15px; width: 100%; max-width: 1400px; overflow-x: auto; }
+        .coluna { background: white; padding: 15px; border-radius: 6px; border: 1px solid #eee; min-width: 280px; flex: 1; }
+        .coluna h2 { font-family: 'Cinzel'; font-size: 0.8rem; color: var(--dourado); border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .card { background: #fafafa; padding: 12px; margin-bottom: 10px; border-left: 4px solid var(--dourado); font-size: 0.85rem; }
+        .mic-btn { font-size: 24px; background: white; border: 1px solid var(--dourado); border-radius: 50%; width: 50px; height: 50px; cursor: pointer; }
     </style>
 </head>
 <body>
-
     <div class="header-box">
-        <img src="logo.png" alt="Logo" class="logo-img">
-        <p style="font-family: 'Cinzel'; color: var(--dourado); letter-spacing: 1px;">PAINEL: <span id="user-name">...</span></p>
-        
-        <div class="input-area">
-            <input type="text" id="task-input" placeholder="Digite uma tarefa ou use o microfone...">
-            <button class="btn-vinho" onclick="salvarManual()">SALVAR</button>
-            <button id="btn-mic" class="mic-btn">🎤</button>
-        </div>
-        <p id="status" style="font-size: 0.7rem; color: #888;">SISTEMA PRONTO</p>
-        <button onclick="mudarSenha()" style="background:none; border:none; color:var(--dourado); cursor:pointer; font-size: 0.7rem;">🔐 Alterar Senha</button> | 
-        <button onclick="logout()" style="background:none; border:none; color:#999; cursor:pointer; font-size: 0.7rem;">Sair</button>
+        <h2 style="font-family: 'Cinzel'; color: var(--vinho);">PAINEL: <span id="user-name">...</span></h2>
+        <button id="btn-mic" class="mic-btn">🎤</button>
+        <p id="status" style="font-size: 0.7rem; color: #888;">CLIQUE PARA FALAR</p>
     </div>
 
     <div class="dashboard">
-        <div class="coluna"><h2>📢 Audiências</h2><div id="lista-audiencia"></div></div>
+        <div class="coluna"><h2>📢 Audiências</h2><div id="lista-aud"></div></div>
         <div class="coluna"><h2>📅 Para Hoje</h2><div id="lista-hoje"></div></div>
-        <div class="coluna"><h2>⏳ Agendados</h2><div id="lista-agendado"></div></div>
-        <div class="coluna"><h2>🧠 Histórico</h2><div id="lista-historico"></div></div>
+        <div class="coluna"><h2>⏳ Agendados</h2><div id="lista-agend"></div></div>
+        <div class="coluna"><h2>🧠 Histórico</h2><div id="lista-hist"></div></div>
     </div>
-
-    <div id="calendar"></div>
 
     <script>
         const API_URL = 'https://gestao-juridica-9r72.onrender.com';
         const usuarioId = localStorage.getItem('usuario_id');
-        const usuarioNome = localStorage.getItem('usuario_nome');
-
-        if (!usuarioId) window.location.href = 'login.html';
-        document.getElementById('user-name').innerText = usuarioNome.toUpperCase();
+        document.getElementById('user-name').innerText = localStorage.getItem('usuario_nome');
 
         async function carregar() {
-            try {
-                const res = await fetch(`${API_URL}/api/lista-tarefas/${usuarioId}`);
-                const tarefas = await res.json();
-                const hoje = new Date().toLocaleDateString('en-CA');
+            const res = await fetch(`${API_URL}/api/lista-tarefas/${usuarioId}`);
+            const tarefas = await res.json();
+            const hoje = new Date().toLocaleDateString('en-CA');
+            
+            const lists = { aud: document.getElementById('lista-aud'), hoje: document.getElementById('lista-hoje'), agend: document.getElementById('lista-agend'), hist: document.getElementById('lista-hist') };
+            Object.values(lists).forEach(l => l.innerHTML = "");
+
+            tarefas.forEach(t => {
+                const isC = t.status === 'CONCLUÍDA', dataT = t.criado_em.split('T')[0];
+                const card = `<div class="card"><strong>${t.titulo}</strong><br>
+                <button onclick="concluir(${t.id})">OK</button> <button onclick="excluir(${t.id})">X</button></div>`;
                 
-                const lists = {
-                    aud: document.getElementById('lista-audiencia'),
-                    hoje: document.getElementById('lista-hoje'),
-                    agend: document.getElementById('lista-agendado'),
-                    hist: document.getElementById('lista-historico')
-                };
-                Object.values(lists).forEach(l => l.innerHTML = "");
-
-                const eventos = [];
-                tarefas.forEach(t => {
-                    const isC = t.status === 'CONCLUÍDA';
-                    const dataT = t.criado_em.split('T')[0];
-                    const card = `<div class="card">
-                        <strong>${t.titulo.toUpperCase()}</strong><br>
-                        <small>${dataT.split('-').reverse().join('/')}</small><br>
-                        ${!isC ? `<button onclick="concluir(${t.id})" style="background:var(--dourado); color:white; border:none; padding:4px 8px; margin-top:8px; cursor:pointer">OK</button>` : ''}
-                        <button onclick="excluir(${t.id})" style="background:#eee; border:none; padding:4px 8px; cursor:pointer">X</button>
-                    </div>`;
-
-                    if (isC) lists.hist.innerHTML += card;
-                    else if (t.titulo.toLowerCase().includes('audiência')) lists.aud.innerHTML += card;
-                    else if (dataT === hoje) lists.hoje.innerHTML += card;
-                    else lists.agend.innerHTML += card;
-
-                    eventos.push({ title: t.titulo, start: dataT, color: isC ? '#28a745' : '#b8935a' });
-                });
-                if (calendar) { calendar.removeAllEvents(); calendar.addEventSource(eventos); }
-            } catch (e) { console.error(e); }
-        }
-
-        async function enviar(texto) {
-            if (!texto) return;
-            document.getElementById('status').innerText = "Processando...";
-            const res = await fetch(`${API_URL}/api/salvar-tarefa`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ texto, usuario_id: usuarioId })
+                if (isC) lists.hist.innerHTML += card;
+                else if (t.titulo.toLowerCase().includes('audiência')) lists.aud.innerHTML += card;
+                else if (dataT === hoje) lists.hoje.innerHTML += card;
+                else lists.agend.innerHTML += card;
             });
-            if (res.ok) {
-                document.getElementById('status').innerText = "✅ REGISTRADO!";
-                document.getElementById('task-input').value = "";
-                carregar();
-            } else { document.getElementById('status').innerText = "❌ ERRO AO SALVAR"; }
         }
-
-        function salvarManual() { enviar(document.getElementById('task-input').value); }
 
         const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         rec.lang = 'pt-BR';
-        document.getElementById('btn-mic').onclick = () => { rec.start(); document.getElementById('status').innerText = "🎤 OUVINDO..."; };
-        rec.onresult = (e) => { enviar(e.results[0][0].transcript); };
+        document.getElementById('btn-mic').onclick = () => { rec.start(); document.getElementById('status').innerText = "OUVINDO..."; };
+        rec.onresult = async (e) => {
+            const texto = e.results[0][0].transcript;
+            document.getElementById('status').innerText = "SALVANDO...";
+            await fetch(`${API_URL}/api/salvar-tarefa`, { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({ texto, usuario_id: usuarioId }) 
+            });
+            carregar();
+            document.getElementById('status').innerText = "✅ SALVO!";
+        };
 
         async function concluir(id) { await fetch(`${API_URL}/api/concluir-tarefa/${id}`, {method:'PUT'}); carregar(); }
-        async function excluir(id) { if(confirm("Remover?")) { await fetch(`${API_URL}/api/excluir-tarefa/${id}`, {method:'DELETE'}); carregar(); } }
-        async function mudarSenha() { 
-            const n = prompt("Nova senha:"); 
-            if(n) { await fetch(`${API_URL}/api/alterar-senha`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({usuario_id:usuarioId, novaSenha:n})}); alert("Alterado!"); }
-        }
-        function logout() { localStorage.clear(); window.location.href = 'login.html'; }
-
-        let calendar;
-        document.addEventListener('DOMContentLoaded', () => {
-            calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { initialView: 'dayGridMonth', locale: 'pt-br', height: 'auto' });
-            calendar.render();
-            carregar();
-        });
+        async function excluir(id) { await fetch(`${API_URL}/api/excluir-tarefa/${id}`, {method:'DELETE'}); carregar(); }
+        carregar();
     </script>
 </body>
 </html>
