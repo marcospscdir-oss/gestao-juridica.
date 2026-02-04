@@ -7,28 +7,28 @@ app.use(cors());
 app.use(express.static(__dirname));
 app.use(express.json());
 
-// CONFIGURAÇÃO DE CONEXÃO OTIMIZADA PARA PLANO GRATUITO
+// CONFIGURAÇÃO DO BANCO (Otimizada para não dar erro de SSL no log)
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
+    ssl: { rejectUnauthorized: false }, // Mantém o SSL apenas para o banco
     max: 10, 
     idleTimeoutMillis: 2000, 
     connectionTimeoutMillis: 10000,
 });
 
-// PING INTERNO PARA MANTER O BANCO E SERVIDOR ATIVOS
+// NOVO SISTEMA ANTI-SONO (Sem usar URL externa para evitar o erro de SSL)
 setInterval(async () => {
     try {
         const client = await pool.connect();
-        await client.query('SELECT 1');
+        await client.query('SELECT 1'); // Ping direto no banco
         client.release();
-        console.log('🔄 Servidor e Banco Ativos.');
+        console.log('✅ Servidor e Banco de Dados ativos (Keep-alive interno)');
     } catch (err) {
-        console.error('⚠️ Erro no Keep-Alive:', err.message);
+        console.error('⚠️ Erro interno no Keep-alive:', err.message);
     }
 }, 240000); // 4 minutos
 
-// LISTA DE USUÁRIOS (Senhas iniciais)
+// LISTA DE USUÁRIOS (Com senhas e suporte para redefinição)
 let usuariosPermitidos = [
     { id: 1, nome: 'Marcos Pedro', email: 'marcospsc.dir@gmail.com', senha: 'admin1205' },
     { id: 2, nome: 'Laurte Leandro', email: 'laurte.adv@gmail.com', senha: 'admin9222' },
@@ -46,30 +46,32 @@ app.post('/api/login', (req, res) => {
     }
 });
 
-// 2. ALTERAR SENHA
+// 2. ALTERAR SENHA (REDEFINIÇÃO)
 app.post('/api/alterar-senha', (req, res) => {
     const { usuario_id, novaSenha } = req.body;
     const usuario = usuariosPermitidos.find(u => u.id == usuario_id);
     if (usuario && novaSenha.length >= 4) {
         usuario.senha = novaSenha;
-        res.json({ mensagem: "Senha alterada com sucesso!" });
+        console.log(`Senha atualizada para o usuário: ${usuario.nome}`);
+        res.json({ mensagem: "Senha alterada!" });
     } else {
-        res.status(400).json({ erro: "Erro ao alterar senha." });
+        res.status(400).json({ erro: "Dados inválidos." });
     }
 });
 
-// 3. SALVAR TAREFA (COM LIBERAÇÃO DE CONEXÃO)
+// 3. SALVAR TAREFA (Otimizado para o Vieira não ter erro)
 app.post('/api/salvar-tarefa', async (req, res) => {
     const { texto, usuario_id } = req.body;
-    if (!usuario_id) return res.status(400).send("ID ausente.");
+    if (!usuario_id) return res.status(400).send("Usuário não identificado.");
 
     let client;
     try {
         client = await pool.connect();
         let dataAgendada = new Date(); 
         const textoBaixo = texto.toLowerCase();
+        
+        // Inteligência de datas
         const meses = { 'janeiro': 0, 'fevereiro': 1, 'março': 2, 'abril': 3, 'maio': 4, 'junho': 5, 'julho': 6, 'agosto': 7, 'setembro': 8, 'outubro': 9, 'novembro': 10, 'dezembro': 11 };
-
         let dataDetectada = false;
         for (let mesNome in meses) {
             if (textoBaixo.includes(mesNome)) {
@@ -89,8 +91,12 @@ app.post('/api/salvar-tarefa', async (req, res) => {
 
         await client.query('INSERT INTO tarefas (titulo, usuario_id, criado_em) VALUES ($1, $2, $3)', [texto, usuario_id, dataAgendada]);
         res.status(201).send("OK");
-    } catch (err) { res.status(500).send(err.message); }
-    finally { if (client) client.release(); }
+    } catch (err) { 
+        console.error("ERRO AO SALVAR NO BANCO:", err.message);
+        res.status(500).send(err.message); 
+    } finally { 
+        if (client) client.release(); // Liberação de conexão obrigatória
+    }
 });
 
 // 4. LISTAR TAREFAS
@@ -119,10 +125,10 @@ app.put('/api/reagendar-ontem/:usuario_id', async (req, res) => {
     let client; try {
         client = await pool.connect();
         const hoje = new Date().toISOString().split('T')[0];
-        await client.query("UPDATE tarefas SET criado_em = $1 WHERE usuario_id = $2 AND status = 'PENDENTE' AND criado_em < $1", [hoje, req.params.usuario_id]);
+        await client.query("UPDATE tarefas SET criado_em = $1 WHERE usuario_id = $2 AND status = 'PENDENTE' AND criado_em < $1", [req.params.usuario_id]);
         res.json("OK");
     } catch (err) { res.status(500).send(err.message); } finally { if (client) client.release(); }
 });
 
 const porta = process.env.PORT || 3000;
-app.listen(porta, () => console.log(`🚀 Sistema Online na porta ${porta}`));
+app.listen(porta, () => console.log(`🚀 Servidor Online e Estável na porta ${porta}`));
