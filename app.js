@@ -10,9 +10,13 @@ app.use(express.json());
 // CONFIGURAÇÃO DE CONEXÃO: Aqui resolvemos o erro da senha
 // Se estiver no Render, ele lê a variável DATABASE_URL. 
 // Se estiver local, ele tenta ler sua variável ou cai no erro se estiver vazia.
+// CONFIGURAÇÃO DE CONEXÃO DINÂMICA
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
+    // Só ativa SSL se houver uma URL e não for localhost
+    ssl: process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost') 
+        ? { rejectUnauthorized: false } 
+        : false,
     max: 10,
     idleTimeoutMillis: 3000,
 });
